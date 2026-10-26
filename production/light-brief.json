@@ -51,8 +51,13 @@
     "CSS fallback if WebGL unavailable"
   ],
   "logo_lighting": "Local horizontal gradient: stronger left half for left light, stronger right half for right light, remaining half faint; center nearly invisible. Garment contour lighting unchanged.",
-  "drop_status": "Full-screen entrance: decorative counter eases to 72% while the scene loads, then the same bar travels onto the marked upper torso position (31% down the garment canvas). It stays at 72%. Scene readiness gates the reveal with a timeout fallback; this number is not network progress. Reduced motion skips travel. After arrival, a narrow pulsing light sweeps left to right across the track every 3.4 seconds; the 72% fill and number remain fixed. Disabled for reduced motion.",
+  "drop_status": "Full-screen entrance: decorative counter eases to 72% while the scene loads, then the same bar travels onto the marked lower torso position above the pouch pocket (64% down the garment canvas). It stays at 72%. Scene readiness gates the reveal with a timeout fallback; this number is not network progress. Reduced motion skips travel. After arrival, a narrow pulsing light sweeps left to right across the track every 3.4 seconds; the 72% fill and number remain fixed. Disabled for reduced motion.",
   "visible_controls": "Move to discover on desktop, Swipe to discover on touch; no visible range slider or direction labels",
   "wordmark": "Clean original TENSA. typography with permanent frontal fill and a directional silver highlight following the eased ring position. CSS lighting approximation, not the rejected generated wordmark.",
-  "coming_soon": "Below single-line invitation, three dots bounce sequentially in a continuous gentle rhythm; reduced-motion disables bounce."
+  "coming_soon": "Below single-line invitation, three dots bounce sequentially in a continuous gentle rhythm; reduced-motion disables bounce.",
+  "intro_emblem": {
+    "asset": "dist/assets/light/intro-elephant.webp",
+    "source": "Image-generation extraction of the user-supplied flat elephant logo, with empty central banner",
+    "presentation": "Fades to 20% white behind a original, unstretched HTML TENSA. wordline. The blank banner border is masked away so only the elephant remains behind the text; fades away as the loading bar travels to the lower torso."
+  }
 }

@@ -28,7 +28,7 @@
     overlay.className='gate-intro';
     overlay.setAttribute('role','status');
     overlay.setAttribute('aria-label','TENSA. Der erste Drop wird vorbereitet.');
-    overlay.innerHTML='<div class="intro-backdrop"></div><div class="intro-bar"><span class="intro-brand">TENSA.</span>'+target.innerHTML+'</div>';
+    overlay.innerHTML='<div class="intro-backdrop"></div><div class="intro-bar"><span class="intro-brand"><img class="intro-emblem" src="/assets/light/intro-elephant.webp" width="145" height="145" alt="" aria-hidden="true"><span class="intro-wordline">TENSA.</span></span>'+target.innerHTML+'</div>';
     document.body.append(overlay);
     document.querySelectorAll('header,main,footer').forEach(el=>{if(!el.inert){el.inert=true;el.dataset.introInert=''}});
     const bar=overlay.querySelector('.intro-bar');
