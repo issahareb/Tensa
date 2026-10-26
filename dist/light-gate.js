@@ -1,5 +1,5 @@
-import {createRingRenderer} from '/ring-mesh.js';
-import {createRingBloom} from '/ring-bloom.js';
+import {createRingRenderer} from '/ring-mesh.js?v=contour-2';
+import {createRingBloom} from '/ring-bloom.js?v=contour-2';
 const canvas = document.querySelector('#lightCanvas');
 const scene = document.querySelector('.light-scene');
 const slider = document.querySelector('#lightPosition');
@@ -40,12 +40,14 @@ void main(){
   vec3 normal=normalize(vec3(p.x*2.8+(tL-tR)*1.7,p.y*.25+(tB-tT)*1.7,.78));
   float diffuse=max(dot(normal,lightDirection),0.);
   float facingEdge=max(dot(edgeNormal,normalize(vec2(light.x+0.0001,-light.y*.2))),0.);
-  float rim=edge*(.032*(1.-side)+.19*facingEdge*side);
-  float exposure=.008+side*.065+diffuse*.50;
-  vec3 textile=pow(cloth.rgb,vec3(.91))*exposure;
-  textile+=vec3(rim)*(.48+dot(cloth.rgb,vec3(.3333)));
-  // A black opaque silhouette masks the ring before its side-lit texture is added.
-  vec3 product=max(vec3(.004),textile);
+  // The body stays a black silhouette. Only the outer edge and a faint
+  // embroidered-logo contour respond to side lighting.
+  float rim=edge*(.04*(1.-side)+.27*facingEdge*side);
+  float fabric=dot(cloth.rgb,vec3(.3333));
+  float logoMask=1.-smoothstep(.82,1.,length((uv-vec2(.62,.58))/vec2(.049,.061)));
+  float logoContour=smoothstep(.24,.40,fabric);
+  float logoLight=logoMask*logoContour*side*(.022+.020*diffuse);
+  vec3 product=vec3(.004+fabric*(.003+diffuse*.014)+rim+logoLight);
   gl_FragColor=vec4(mix(background,product,cloth.a)+vec3(bloom),1.);
 }`;
 
@@ -53,12 +55,12 @@ function fallbackRenderer(){
   const wrap = document.querySelector('.scene-fallback');
   const base = wrap.querySelector(':scope > img');
   const lit = base.cloneNode();
-  lit.style.cssText='position:absolute;inset:0;filter:brightness(.55);opacity:0;';
+  lit.style.cssText='position:absolute;inset:0;filter:grayscale(1) brightness(.07);opacity:0;';
   wrap.append(lit);
   const ring = wrap.querySelector('i');
   return (lx,ly)=>{
     ring.style.transform=`translate(${lx*37}%,${ly*5}%) scaleX(${1-Math.abs(lx)*.35})`;
-    lit.style.opacity=String(Math.abs(lx)*.7);
+    lit.style.opacity=String(Math.abs(lx)*.35);
     lit.style.maskImage=`linear-gradient(${lx<0?'90':'270'}deg,black,transparent 85%)`;
   };
 }

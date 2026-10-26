@@ -10,9 +10,13 @@ export function createRingBloom(gl) {
     uniform vec2 direction;uniform float maskSource;
     float readLight(vec2 p){return texture2D(source,p).r*(1.-maskSource*texture2D(garment,p).a);}
     void main(){
-      float glow=readLight(uv)*.227027;
-      glow+=(readLight(uv+direction*1.384615)+readLight(uv-direction*1.384615))*.316216;
-      glow+=(readLight(uv+direction*3.230769)+readLight(uv-direction*3.230769))*.070270;
+      float glow=0.;float weightSum=0.;
+      for(int i=-12;i<=12;i++){
+        float weight=exp(-float(i*i)/32.);
+        glow+=readLight(uv+direction*float(i))*weight;
+        weightSum+=weight;
+      }
+      glow/=weightSum;
       gl_FragColor=vec4(vec3(glow),1.);
     }`));
   gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Bloom link failed');
@@ -38,7 +42,7 @@ export function createRingBloom(gl) {
       for(let pass=0;pass<2;pass++){
         gl.bindFramebuffer(gl.FRAMEBUFFER,targets[pass].framebuffer);
         gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,pass===0?ringTexture:targets[0].texture);
-        gl.uniform1f(mask,pass===0?1:0);gl.uniform2f(direction,pass===0?.007:0,pass===1?.007:0);gl.drawArrays(gl.TRIANGLES,0,6);
+        gl.uniform1f(mask,pass===0?1:0);gl.uniform2f(direction,pass===0?.0018:0,pass===1?.0018:0);gl.drawArrays(gl.TRIANGLES,0,6);
       }
       gl.disableVertexAttribArray(position);gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     }

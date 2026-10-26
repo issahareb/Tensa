@@ -38,9 +38,10 @@
       "total": 55,
       "remaining": 945
     },
-    "high_resolution_asset": "/workspace/tripo-assets/tensa-ring-source/tensa-ring-luminous-high.glb"
+    "high_resolution_asset": "/workspace/tripo-assets/tensa-ring-source/tensa-ring-luminous-high.glb",
+    "surface_cleanup": "Generated topology retained; vertex positions regularized to a smooth circular tube in shader; uniform white emission without normal-based shading. Bloom uses a dense Gaussian kernel to avoid bands."
   },
-  "rendering": "Actual 3D ring mesh rendered with perspective and depth; photo-based hoodie relighting uses approximate surface normals, not a 3D garment physics simulation",
+  "rendering": "3D ring with perspective and depth; photo-based garment stays near black with directional outer-edge lighting and a faint neutral logo silhouette. Mouse/touch motion unchanged.",
   "discount": "15 percent for all registrations before launch; no count cap",
   "accessibility": [
     "keyboard range control",
