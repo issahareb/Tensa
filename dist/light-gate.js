@@ -107,6 +107,12 @@ function update(time=performance.now()){
   if(Math.abs(targetX-x)<.001)x=targetX;
   if(Math.abs(targetY-y)<.001)y=targetY;
   renderLight?.(x,y);
+  // Directional typographic highlight follows the same eased ring position.
+  // Keep a permanent frontal fill so the brand never becomes a silhouette.
+  const wordmark=document.querySelector('.wordmark');
+  wordmark.style.setProperty('--word-light-x',`${50+x*48}%`);
+  wordmark.style.setProperty('--word-light-a',String(.16+Math.abs(x)*.36));
+  wordmark.style.setProperty('--word-edge-x',`${-x*.7}px`);
   scene.setAttribute('aria-valuenow',String(Math.round(x*100)));
   scene.setAttribute('aria-valuetext',Math.abs(x)<.15?'Hinter dem Hoodie':x<0?'Licht von links':'Licht von rechts');
   if(x!==targetX||y!==targetY)frame=requestAnimationFrame(update);else lastFrame=0;
@@ -133,25 +139,6 @@ reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;
 addEventListener('resize',requestRender);motionState();
 const loadImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});
 Promise.all([loadImage('/assets/light/hoodie.webp'),fetch('/assets/light/ring.glb?v=smooth-3').then(r=>{if(!r.ok)throw Error('Ring unavailable');return r.arrayBuffer()})]).then(([hoodie,ring])=>initialiseTexture(hoodie,ring)).catch(()=>{scene.classList.add('scene-loaded');renderLight=fallbackRenderer();update()});
-
-// Decorative prelaunch status: count and light sweep ease to 72%, then hold.
-const dropLoader=document.querySelector('.drop-loader');
-const dropNumber=document.querySelector('.load-number');
-let dropFrame=0;
-function setDropProgress(value){dropLoader.style.setProperty('--progress',String(value/100));dropNumber.textContent=String(Math.round(value))}
-function startDropCharge(){
-  cancelAnimationFrame(dropFrame);
-  if(reducedQuery.matches){setDropProgress(72);return}
-  const started=performance.now();
-  function charge(now){
-    const t=Math.min(1,(now-started)/3200),eased=1-Math.pow(1-t,3);
-    setDropProgress(72*eased);
-    if(t<1)dropFrame=requestAnimationFrame(charge);
-  }
-  dropFrame=requestAnimationFrame(charge);
-}
-reducedQuery.addEventListener('change',()=>{cancelAnimationFrame(dropFrame);setDropProgress(72)});
-startDropCharge();
 
 const status=document.querySelector('#formStatus');
 const confirmation=new URLSearchParams(location.search).get('confirmation');

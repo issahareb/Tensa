@@ -51,3 +51,24 @@ footer{position:relative;z-index:5;background:#050505}.footer-note{color:#505048
 @media(min-width:681px) and (max-width:1100px){.drop-loader{left:44%}}
 @media(max-width:680px){.hero-invitation{top:177px;font-size:clamp(15px,4.6vw,21px);padding:0;max-width:94%;letter-spacing:-.5px}.drop-loader{top:223px;width:min(280px,74vw)}.light-controls{top:722px}}
 @media(max-width:360px){.light-controls{top:675px}}
+
+/* Entrance choreography: the full-screen light bar settles on the garment. */
+.gate-entering{overflow:hidden}
+.gate-entering .drop-loader{visibility:hidden}
+.gate-intro{position:fixed;inset:0;z-index:100;isolation:isolate;pointer-events:auto}
+.intro-backdrop{position:absolute;inset:0;background:#050505}
+.intro-bar{--progress:0;position:absolute;left:50%;top:50%;width:min(360px,74vw);margin-left:max(-180px,-37vw);transform-origin:top left;font-family:monospace}
+.intro-brand{position:absolute;bottom:48px;width:100%;text-align:center;font:700 29px/1 'DM Sans',Arial,sans-serif;letter-spacing:-1.7px;color:#e7e5df;transition:opacity .3s}
+.drop-loader{top:calc(245px + min(950px,85vw)*.31);width:min(360px,64vw);--progress:.72}
+.drop-loader .load-caption{color:#8c8c86}
+.coming-soon{top:265px;color:#93938c;letter-spacing:3px}
+.soon-dots{display:inline-flex;letter-spacing:0;margin-left:3px;gap:3px}
+.soon-dots i{display:inline-block;font-style:normal;animation:soon-bounce 1.8s cubic-bezier(.45,0,.55,1) infinite;will-change:transform}
+.soon-dots i:nth-child(2){animation-delay:.18s}
+.soon-dots i:nth-child(3){animation-delay:.36s}
+@keyframes soon-bounce{0%,12%,52%,100%{transform:translateY(0)}32%{transform:translateY(-4px)}}
+.site-header .wordmark{--word-light-x:50%;--word-light-a:.16;--word-edge-x:0px;color:#d7d7d2;background:radial-gradient(ellipse at var(--word-light-x) 65%,rgb(255 255 255 / var(--word-light-a)),transparent 65%),linear-gradient(180deg,#f1f1eb 0%,#d5d5cf 48%,#a7a8a2 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(var(--word-edge-x) -.5px .4px #ffffff55);text-shadow:0 0 24px #ffffff06}
+@media(min-width:1700px){.drop-loader{top:586px}}
+@media(min-width:681px) and (max-width:1100px){.drop-loader{top:508.5px}}
+@media(max-width:680px){.coming-soon{top:213px;font-size:7px;letter-spacing:2.6px}.drop-loader{top:calc(235px + min(620px,140vw)*.31);width:min(280px,64vw)}}
+@media(prefers-reduced-motion:reduce){.soon-dots i{animation:none;transform:none}}
