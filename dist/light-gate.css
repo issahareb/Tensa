@@ -79,3 +79,19 @@ html[data-intro="complete"] .drop-loader .load-track::after{animation:drop-light
 @media(min-width:681px) and (max-width:1100px){.drop-loader{top:789px}}
 @media(max-width:680px){.coming-soon{top:213px;font-size:7px;letter-spacing:2.6px}.drop-loader{top:calc(235px + min(620px,140vw)*.64);width:min(280px,64vw)}}
 @media(prefers-reduced-motion:reduce){.soon-dots i{animation:none;transform:none}}
+
+/* A gesture demonstration, not a second control or a slider. */
+.light-controls{width:260px;pointer-events:none}
+.light-caption{display:block;font-size:9px;letter-spacing:2px;color:#e0dfd8}
+.light-help{display:block;margin-top:7px;font-size:10px;line-height:1.4;letter-spacing:0;color:#a6a69e}
+.swipe-gesture{height:30px;display:flex;justify-content:center;align-items:center;gap:24px;margin-bottom:10px;color:#e0dfd8}
+.swipe-arrow{font-size:19px;color:#999a92}
+.swipe-hand{flex:none;filter:drop-shadow(0 0 5px #ffffff25)}
+html[data-intro="complete"] .swipe-hand{animation:swipe-demonstration 2.8s cubic-bezier(.45,0,.25,1) infinite}
+@keyframes swipe-demonstration{0%,12%,100%{transform:translateX(0) rotate(0)}32%{transform:translateX(-18px) rotate(-8deg)}65%{transform:translateX(18px) rotate(8deg)}85%{transform:translateX(0) rotate(0)}}
+.swipe-discovered .swipe-gesture{opacity:.45;transition:opacity .6s}
+html[data-intro="complete"] .swipe-discovered .swipe-hand,html[data-intro="complete"] .motion-paused .swipe-hand{animation:none}
+@media(pointer:fine){.swipe-gesture{display:none}}
+@media(max-width:680px){.light-controls{top:702px;width:280px}.light-help{font-size:10px}.swipe-gesture{margin-bottom:8px}}
+@media(max-width:360px){.light-controls{top:657px}}
+@media(prefers-reduced-motion:reduce){html[data-intro="complete"] .swipe-hand{animation:none}}

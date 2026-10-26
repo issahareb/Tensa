@@ -125,15 +125,15 @@ document.addEventListener('pointermove',e=>{
   setTarget(e.clientX/innerWidth*2-1,e.clientY/innerHeight*2-1);
 },{passive:true});
 document.documentElement.addEventListener('pointerleave',()=>{if(!paused)setTarget(0)});
-let dragging=false;
-scene.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch'||e.target.closest('input'))return;dragging=true;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)});
-scene.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!dragging)return;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)},{passive:true});
+let dragging=false,swipeStartX=0;
+scene.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch'||e.target.closest('input'))return;dragging=true;swipeStartX=e.clientX;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)});
+scene.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!dragging)return;if(Math.abs(e.clientX-swipeStartX)>24)scene.classList.add('swipe-discovered');const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)},{passive:true});
 scene.addEventListener('pointerup',()=>{dragging=false});scene.addEventListener('pointercancel',()=>{dragging=false});
 scene.addEventListener('keydown',e=>{
   const positions={ArrowLeft:targetX-.1,ArrowRight:targetX+.1,Home:0,End:1};
   if(e.key in positions){e.preventDefault();setTarget(positions[e.key])}
 });
-function motionState(){motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Licht aktivieren':'Licht pausieren';document.querySelector('#lightHint').textContent=paused?'LICHT MANUELL BEWEGEN':matchMedia('(pointer:coarse)').matches?'SWIPE TO DISCOVER':'MOVE TO DISCOVER'}
+function motionState(){scene.classList.toggle('motion-paused',paused);document.querySelector('#lightHelp').textContent=matchMedia('(pointer:coarse)').matches?'Wische nach links oder rechts. Bewege das Licht.':'Bewege die Maus und entdecke das Licht.';motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Licht aktivieren':'Licht pausieren';document.querySelector('#lightHint').textContent=paused?'LICHT MANUELL BEWEGEN':matchMedia('(pointer:coarse)').matches?'SWIPE TO DISCOVER':'MOVE TO DISCOVER'}
 motionButton.addEventListener('click',()=>{paused=!paused;targetX=x;targetY=y;motionState();requestRender()});
 reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;motionState()});
 addEventListener('resize',requestRender);motionState();
