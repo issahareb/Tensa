@@ -1,0 +1,52 @@
+{
+  "status": "implemented",
+  "interaction": "pointer-driven 3D luminous ring, no scroll animation",
+  "layout": "fixed centered TENSA.; German invitation above foreground hoodie; compact signup right on desktop, below on mobile",
+  "states": {
+    "center": "ring behind opaque near-black hoodie silhouette",
+    "left": "ring moves and rotates left, subtle left illumination",
+    "right": "ring moves and rotates right, subtle right illumination"
+  },
+  "hoodie": {
+    "generator": "Higgsfield",
+    "reference_media": [
+      "1cde7a8d-b053-415a-b1c4-ff2ae10573bf",
+      "63ba9f4d-3afe-400f-a196-956820fb4611"
+    ],
+    "generation": "f39eec0d-bb0c-4e17-a68f-a0402d7a1901",
+    "cutout": "f42af2a6-a5ca-4a54-9f80-994aec2b20a4",
+    "asset": "dist/assets/light/hoodie.webp"
+  },
+  "ring": {
+    "generator": "Tripo CLI 0.7.3 / Tripo 3D plugin",
+    "model": "tripo-v3.1",
+    "wire_model": "v3.1-20260211",
+    "generation_task": "9ebffc27-05b7-48ef-94f8-fccce7a3f8ff",
+    "optimization_task": "64ce59c2-b705-4453-98bd-2a1e1ba3ccd8",
+    "export_task": "59fc02eb-66b0-4423-ba7a-ed7f3f392339",
+    "asset": "dist/assets/light/ring.glb",
+    "source_triangles": 1430150,
+    "web_triangles": 21580,
+    "web_vertices": 16730,
+    "web_bytes": 532152,
+    "material": "White emission, KHR_materials_emissive_strength=12; WebGL white core plus occlusion-aware Gaussian bloom",
+    "modifications": "PCA alignment, center and scale normalization, texture replacement with emission",
+    "credits": {
+      "generation": 20,
+      "optimization": 30,
+      "usdz_export": 5,
+      "total": 55,
+      "remaining": 945
+    },
+    "high_resolution_asset": "/workspace/tripo-assets/tensa-ring-source/tensa-ring-luminous-high.glb"
+  },
+  "rendering": "Actual 3D ring mesh rendered with perspective and depth; photo-based hoodie relighting uses approximate surface normals, not a 3D garment physics simulation",
+  "discount": "15 percent for all registrations before launch; no count cap",
+  "accessibility": [
+    "keyboard range control",
+    "touch control",
+    "pause",
+    "reduced motion",
+    "CSS fallback if WebGL unavailable"
+  ]
+}

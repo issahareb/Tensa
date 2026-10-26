@@ -1,0 +1,139 @@
+import {createRingRenderer} from '/ring-mesh.js';
+import {createRingBloom} from '/ring-bloom.js';
+const canvas = document.querySelector('#lightCanvas');
+const scene = document.querySelector('.light-scene');
+const slider = document.querySelector('#lightPosition');
+const motionButton = document.querySelector('#motionToggle');
+const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
+let paused = reducedQuery.matches;
+let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, lastFrame = 0, renderLight;
+const clamp = (n, lo = -1, hi = 1) => Math.max(lo, Math.min(hi, n));
+
+// The photograph remains unchanged in shape. Lighting is an illustrative
+// surface approximation, not a 3D garment or a cloth-physics simulation.
+const vertex = `attribute vec2 position; varying vec2 uv;
+void main(){uv=position*.5+.5;gl_Position=vec4(position,0.,1.);}`;
+const fragment = `precision highp float;
+varying vec2 uv; uniform sampler2D garment; uniform sampler2D lamp; uniform sampler2D glow; uniform vec2 light; uniform vec2 texel;
+float alphaAt(vec2 p){return texture2D(garment,p).a;}
+void main(){
+  vec4 cloth=texture2D(garment,uv);
+  vec2 p=uv-.5;
+  float side=abs(light.x);
+  vec4 physicalLamp=texture2D(lamp,uv);
+  vec3 background=vec3(.0196);
+  float bloom=texture2D(glow,uv).r*.65;
+  background=mix(background,physicalLamp.rgb,physicalLamp.a);
+
+  vec2 d=texel*3.;
+  float aL=alphaAt(uv-vec2(d.x,0.)); float aR=alphaAt(uv+vec2(d.x,0.));
+  float aB=alphaAt(uv-vec2(0.,d.y)); float aT=alphaAt(uv+vec2(0.,d.y));
+  vec2 outward=vec2(aL-aR,aB-aT);
+  float edge=clamp(length(outward),0.,1.);
+  vec2 edgeNormal=outward/max(length(outward),.001);
+  vec3 lightDirection=normalize(vec3(light.x*1.65,-light.y*.3,-.95+side*1.38));
+
+  float tL=dot(texture2D(garment,uv-vec2(texel.x,0.)).rgb,vec3(.3333));
+  float tR=dot(texture2D(garment,uv+vec2(texel.x,0.)).rgb,vec3(.3333));
+  float tB=dot(texture2D(garment,uv-vec2(0.,texel.y)).rgb,vec3(.3333));
+  float tT=dot(texture2D(garment,uv+vec2(0.,texel.y)).rgb,vec3(.3333));
+  vec3 normal=normalize(vec3(p.x*2.8+(tL-tR)*1.7,p.y*.25+(tB-tT)*1.7,.78));
+  float diffuse=max(dot(normal,lightDirection),0.);
+  float facingEdge=max(dot(edgeNormal,normalize(vec2(light.x+0.0001,-light.y*.2))),0.);
+  float rim=edge*(.032*(1.-side)+.19*facingEdge*side);
+  float exposure=.008+side*.065+diffuse*.50;
+  vec3 textile=pow(cloth.rgb,vec3(.91))*exposure;
+  textile+=vec3(rim)*(.48+dot(cloth.rgb,vec3(.3333)));
+  // A black opaque silhouette masks the ring before its side-lit texture is added.
+  vec3 product=max(vec3(.004),textile);
+  gl_FragColor=vec4(mix(background,product,cloth.a)+vec3(bloom),1.);
+}`;
+
+function fallbackRenderer(){
+  const wrap = document.querySelector('.scene-fallback');
+  const base = wrap.querySelector(':scope > img');
+  const lit = base.cloneNode();
+  lit.style.cssText='position:absolute;inset:0;filter:brightness(.55);opacity:0;';
+  wrap.append(lit);
+  const ring = wrap.querySelector('i');
+  return (lx,ly)=>{
+    ring.style.transform=`translate(${lx*37}%,${ly*5}%) scaleX(${1-Math.abs(lx)*.35})`;
+    lit.style.opacity=String(Math.abs(lx)*.7);
+    lit.style.maskImage=`linear-gradient(${lx<0?'90':'270'}deg,black,transparent 85%)`;
+  };
+}
+
+function initialiseTexture(image,ringBuffer){
+  try {
+    const gl = canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:false});
+    if(!gl)throw Error('WebGL unavailable');
+    const compile=(type,source)=>{const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error('Shader compilation failed');return shader};
+    const program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Shader link failed');gl.useProgram(program);
+    const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+    const position=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
+    const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.uniform1i(gl.getUniformLocation(program,'garment'),0);
+    const ring=createRingRenderer(gl,ringBuffer), bloom=createRingBloom(gl);gl.useProgram(program);gl.uniform1i(gl.getUniformLocation(program,'glow'),2);gl.uniform1i(gl.getUniformLocation(program,'lamp'),1);gl.uniform2f(gl.getUniformLocation(program,'texel'),1/image.width,1/image.height);
+    const light=gl.getUniformLocation(program,'light');
+    renderLight=(lx,ly)=>{
+      const size=Math.min(1180,Math.round(canvas.clientWidth*Math.min(devicePixelRatio,1.4)));
+      if(canvas.width!==size){canvas.width=size;canvas.height=size}
+      ring.render(size,lx,ly);bloom.render(size,ring.texture,texture);
+      gl.viewport(0,0,size,size);gl.useProgram(program);
+      gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
+      gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);
+      gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,ring.texture);
+      gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,bloom.texture);
+      gl.uniform2f(light,lx,ly);gl.drawArrays(gl.TRIANGLES,0,6);canvas.dataset.light=lx.toFixed(3);canvas.dataset.renderer='mesh-3d';
+    };
+    canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();scene.classList.remove('scene-ready');renderLight=fallbackRenderer();update()});
+    scene.classList.add('scene-ready');
+  } catch {
+    renderLight=fallbackRenderer();
+  }
+  scene.classList.add('scene-loaded');
+  update();
+}
+
+function update(time=performance.now()){
+  frame=0;
+  const ease=1-Math.exp(-Math.min(80,lastFrame?time-lastFrame:16)/110);lastFrame=time;
+  x=paused?targetX:x+(targetX-x)*ease;
+  y=paused?targetY:y+(targetY-y)*ease;
+  if(Math.abs(targetX-x)<.001)x=targetX;
+  if(Math.abs(targetY-y)<.001)y=targetY;
+  renderLight?.(x,y);
+  slider.value=String(Math.round(x*100));
+  slider.setAttribute('aria-valuetext',Math.abs(x)<.15?'Hinter dem Hoodie':x<0?'Licht von links':'Licht von rechts');
+  if(x!==targetX||y!==targetY)frame=requestAnimationFrame(update);else lastFrame=0;
+}
+function requestRender(){if(!frame)frame=requestAnimationFrame(update)}
+function setTarget(lx,ly=0){targetX=clamp(lx);targetY=clamp(ly);requestRender()}
+
+document.addEventListener('pointermove',e=>{
+  if(paused||e.pointerType==='touch'||e.target.closest('input,button,a,label'))return;
+  setTarget(e.clientX/innerWidth*2-1,e.clientY/innerHeight*2-1);
+},{passive:true});
+document.documentElement.addEventListener('pointerleave',()=>{if(!paused)setTarget(0)});
+let dragging=false;
+scene.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch'||e.target.closest('input'))return;dragging=true;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)});
+scene.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!dragging)return;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)},{passive:true});
+scene.addEventListener('pointerup',()=>{dragging=false});scene.addEventListener('pointercancel',()=>{dragging=false});
+slider.addEventListener('input',()=>setTarget(Number(slider.value)/100));
+function motionState(){motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Licht aktivieren':'Licht pausieren';document.querySelector('#lightHint').textContent=paused?'LICHT MANUELL BEWEGEN':matchMedia('(pointer:coarse)').matches?'SWIPE TO DISCOVER':'MOVE TO DISCOVER'}
+motionButton.addEventListener('click',()=>{paused=!paused;targetX=x;targetY=y;motionState();requestRender()});
+reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;motionState()});
+addEventListener('resize',requestRender);motionState();
+const loadImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});
+Promise.all([loadImage('/assets/light/hoodie.webp'),fetch('/assets/light/ring.glb').then(r=>{if(!r.ok)throw Error('Ring unavailable');return r.arrayBuffer()})]).then(([hoodie,ring])=>initialiseTexture(hoodie,ring)).catch(()=>{scene.classList.add('scene-loaded');renderLight=fallbackRenderer();update()});
+
+const status=document.querySelector('#formStatus');
+const confirmation=new URLSearchParams(location.search).get('confirmation');
+document.querySelector('#waitlist').addEventListener('submit',async e=>{
+  e.preventDefault();const form=e.currentTarget,button=form.querySelector('button');button.disabled=true;status.textContent='Dein Zugang wird vorbereitet…';
+  try{const response=await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:form.email.value,consent:form.consent.checked,website:form.website.value})});const data=await response.json();status.textContent=data.message||data.error;if(response.ok)form.reset()}
+  catch{status.textContent='Verbindung unterbrochen. Bitte versuche es noch einmal.'}
+  finally{button.disabled=false}
+});
+if(confirmation){status.textContent=confirmation==='success'?'Du bist dabei. Deine E-Mail ist bestätigt.':'Dieser Link ist abgelaufen oder bereits verwendet.';document.querySelector('#access').scrollIntoView({behavior:'instant'})}
