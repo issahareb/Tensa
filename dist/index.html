@@ -5,7 +5,7 @@
   <meta name="theme-color" content="#050505">
   <meta name="description" content="TENSA. Der erste Drop. Sei vor dem Launch dabei und sichere dir 15 % Rabatt.">
   <title>TENSA. — Coming soon</title>
-  <link rel="stylesheet" href="/light-gate.css">
+  <link rel="stylesheet" href="/light-gate.css?v=drop-72-4">
 </head>
 <body>
   <header class="site-header">
@@ -15,7 +15,7 @@
   </header>
   <main class="gate">
     <h1 class="hero-invitation">Sei dabei,<br>wenn es passiert.</h1>
-    <section class="light-scene" aria-label="Interaktiver TENSA Hoodie">
+    <section class="light-scene" role="slider" tabindex="0" aria-label="Lichtposition am TENSA Hoodie; mit den Pfeiltasten bewegen" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Hinter dem Hoodie">
       <div class="scene-canvas-wrap">
         <div class="scene-fallback" aria-hidden="true"><i></i><img src="/assets/light/hoodie.webp" alt=""></div>
         <canvas id="lightCanvas" aria-hidden="true"></canvas>
@@ -24,9 +24,12 @@
       <div class="scene-label"><span class="signal"></span> 001 / THE FIRST DROP</div>
       <div class="light-controls">
         <span class="light-caption" id="lightHint">MOVE TO DISCOVER</span>
-        <label class="sr-only" for="lightPosition">Lichtposition: links, hinten oder rechts</label>
-        <input id="lightPosition" type="range" min="-100" max="100" value="0" step="1" aria-valuetext="Hinter dem Hoodie" title="Lichtposition ändern">
-        <div class="light-directions" aria-hidden="true"><span>LEFT</span><span>BEHIND</span><span>RIGHT</span></div>
+
+      </div>
+      <div class="drop-loader" aria-label="Drop-Status: 72 Prozent">
+        <div class="drop-loader-meta"><span>DROP LOADING</span><span class="drop-percent">72<span>%</span></span></div>
+        <div class="load-track" aria-hidden="true"><i></i></div>
+        <div class="load-caption" aria-hidden="true"><span class="load-pulse">•••</span><span>COMING SOON</span></div>
       </div>
       <p class="coming-soon">COMING SOON</p>
     </section>
@@ -45,6 +48,6 @@
     </section>
   </main>
   <footer><span>© TENSA.</span><span class="footer-note">THE BEGINNING OF SOMETHING.</span><nav aria-label="Rechtliches"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/asset-credits.html">Credits</a><button id="motionToggle" aria-pressed="false">Licht pausieren</button></nav></footer>
-  <script type="module" src="/light-gate.js?v=contour-2"></script>
+  <script type="module" src="/light-gate.js?v=drop-72-4"></script>
 </body>
 </html>

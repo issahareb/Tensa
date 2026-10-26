@@ -1,8 +1,7 @@
-import {createRingRenderer} from '/ring-mesh.js?v=contour-2';
-import {createRingBloom} from '/ring-bloom.js?v=contour-2';
+import {createRingRenderer} from '/ring-mesh.js?v=logo-light-3';
+import {createRingBloom} from '/ring-bloom.js?v=logo-light-3';
 const canvas = document.querySelector('#lightCanvas');
 const scene = document.querySelector('.light-scene');
-const slider = document.querySelector('#lightPosition');
 const motionButton = document.querySelector('#motionToggle');
 const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let paused = reducedQuery.matches;
@@ -23,7 +22,7 @@ void main(){
   vec4 physicalLamp=texture2D(lamp,uv);
   vec3 background=vec3(.0196);
   float bloom=texture2D(glow,uv).r*.65;
-  background=mix(background,physicalLamp.rgb,physicalLamp.a);
+  background=mix(background,vec3(1.),physicalLamp.a);
 
   vec2 d=texel*3.;
   float aL=alphaAt(uv-vec2(d.x,0.)); float aR=alphaAt(uv+vec2(d.x,0.));
@@ -46,7 +45,9 @@ void main(){
   float fabric=dot(cloth.rgb,vec3(.3333));
   float logoMask=1.-smoothstep(.82,1.,length((uv-vec2(.62,.58))/vec2(.049,.061)));
   float logoContour=smoothstep(.24,.40,fabric);
-  float logoLight=logoMask*logoContour*side*(.022+.020*diffuse);
+  float logoRight=smoothstep(.589,.651,uv.x);
+  float illuminatedHalf=mix(1.-logoRight,logoRight,step(0.,light.x));
+  float logoLight=logoMask*logoContour*side*(.012+.115*illuminatedHalf);
   vec3 product=vec3(.004+fabric*(.003+diffuse*.014)+rim+logoLight);
   gl_FragColor=vec4(mix(background,product,cloth.a)+vec3(bloom),1.);
 }`;
@@ -106,8 +107,8 @@ function update(time=performance.now()){
   if(Math.abs(targetX-x)<.001)x=targetX;
   if(Math.abs(targetY-y)<.001)y=targetY;
   renderLight?.(x,y);
-  slider.value=String(Math.round(x*100));
-  slider.setAttribute('aria-valuetext',Math.abs(x)<.15?'Hinter dem Hoodie':x<0?'Licht von links':'Licht von rechts');
+  scene.setAttribute('aria-valuenow',String(Math.round(x*100)));
+  scene.setAttribute('aria-valuetext',Math.abs(x)<.15?'Hinter dem Hoodie':x<0?'Licht von links':'Licht von rechts');
   if(x!==targetX||y!==targetY)frame=requestAnimationFrame(update);else lastFrame=0;
 }
 function requestRender(){if(!frame)frame=requestAnimationFrame(update)}
@@ -122,13 +123,16 @@ let dragging=false;
 scene.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch'||e.target.closest('input'))return;dragging=true;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)});
 scene.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!dragging)return;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)},{passive:true});
 scene.addEventListener('pointerup',()=>{dragging=false});scene.addEventListener('pointercancel',()=>{dragging=false});
-slider.addEventListener('input',()=>setTarget(Number(slider.value)/100));
+scene.addEventListener('keydown',e=>{
+  const positions={ArrowLeft:targetX-.1,ArrowRight:targetX+.1,Home:0,End:1};
+  if(e.key in positions){e.preventDefault();setTarget(positions[e.key])}
+});
 function motionState(){motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Licht aktivieren':'Licht pausieren';document.querySelector('#lightHint').textContent=paused?'LICHT MANUELL BEWEGEN':matchMedia('(pointer:coarse)').matches?'SWIPE TO DISCOVER':'MOVE TO DISCOVER'}
 motionButton.addEventListener('click',()=>{paused=!paused;targetX=x;targetY=y;motionState();requestRender()});
 reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;motionState()});
 addEventListener('resize',requestRender);motionState();
 const loadImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});
-Promise.all([loadImage('/assets/light/hoodie.webp'),fetch('/assets/light/ring.glb').then(r=>{if(!r.ok)throw Error('Ring unavailable');return r.arrayBuffer()})]).then(([hoodie,ring])=>initialiseTexture(hoodie,ring)).catch(()=>{scene.classList.add('scene-loaded');renderLight=fallbackRenderer();update()});
+Promise.all([loadImage('/assets/light/hoodie.webp'),fetch('/assets/light/ring.glb?v=smooth-3').then(r=>{if(!r.ok)throw Error('Ring unavailable');return r.arrayBuffer()})]).then(([hoodie,ring])=>initialiseTexture(hoodie,ring)).catch(()=>{scene.classList.add('scene-loaded');renderLight=fallbackRenderer();update()});
 
 const status=document.querySelector('#formStatus');
 const confirmation=new URLSearchParams(location.search).get('confirmation');

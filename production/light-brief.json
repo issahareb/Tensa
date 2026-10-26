@@ -3,7 +3,7 @@
   "interaction": "pointer-driven 3D luminous ring, no scroll animation",
   "layout": "fixed centered TENSA.; German invitation above foreground hoodie; compact signup right on desktop, below on mobile",
   "states": {
-    "center": "ring behind opaque near-black hoodie silhouette",
+    "center": "ring centered behind opaque near-black hoodie silhouette",
     "left": "ring moves and rotates left, subtle left illumination",
     "right": "ring moves and rotates right, subtle right illumination"
   },
@@ -26,9 +26,9 @@
     "export_task": "59fc02eb-66b0-4423-ba7a-ed7f3f392339",
     "asset": "dist/assets/light/ring.glb",
     "source_triangles": 1430150,
-    "web_triangles": 21580,
-    "web_vertices": 16730,
-    "web_bytes": 532152,
+    "web_triangles": 32768,
+    "web_vertices": 16384,
+    "web_bytes": 590984,
     "material": "White emission, KHR_materials_emissive_strength=12; WebGL white core plus occlusion-aware Gaussian bloom",
     "modifications": "PCA alignment, center and scale normalization, texture replacement with emission",
     "credits": {
@@ -39,15 +39,18 @@
       "remaining": 945
     },
     "high_resolution_asset": "/workspace/tripo-assets/tensa-ring-source/tensa-ring-luminous-high.glb",
-    "surface_cleanup": "Generated topology retained; vertex positions regularized to a smooth circular tube in shader; uniform white emission without normal-based shading. Bloom uses a dense Gaussian kernel to avoid bands."
+    "surface_cleanup": "Precision circular tube remesh using the generated normalized dimensions, 512 segments x 32 sides. Uniform white emission, 2x supersampled offscreen rendering and Gaussian bloom. No image texture or normal shading. Original Tripo source kept separately."
   },
   "rendering": "3D ring with perspective and depth; photo-based garment stays near black with directional outer-edge lighting and a faint neutral logo silhouette. Mouse/touch motion unchanged.",
   "discount": "15 percent for all registrations before launch; no count cap",
   "accessibility": [
-    "keyboard range control",
+    "keyboard arrows and Home on scene",
     "touch control",
     "pause",
     "reduced motion",
     "CSS fallback if WebGL unavailable"
-  ]
+  ],
+  "logo_lighting": "Local horizontal gradient: stronger left half for left light, stronger right half for right light, remaining half faint; center nearly invisible. Garment contour lighting unchanged.",
+  "drop_status": "Decorative segmented loading animation at the lower hoodie; reaches 72% and holds. Not connected to network loading.",
+  "visible_controls": "Move to discover on desktop, Swipe to discover on touch; no visible range slider or direction labels"
 }

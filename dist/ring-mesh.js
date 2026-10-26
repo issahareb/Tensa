@@ -1,5 +1,5 @@
-// Tripo-generated 3D ring, normalized for the browser.
-// Surface deviations are projected to a smooth tube; emission is uniform white.
+// Precision remesh of the Tripo ring dimensions with uniform white emission.
+// Source generation and local remeshing are documented in production/.
 export function createRingRenderer(gl, buffer) {
   const view = new DataView(buffer);
   if (view.getUint32(0, true) !== 0x46546c67) throw Error('Invalid ring model');
@@ -25,12 +25,8 @@ export function createRingRenderer(gl, buffer) {
       float angle=-pointer.x*.82;
       float c=cos(angle),s=sin(angle);
       mat3 rotation=mat3(c,0.,-s,0.,1.,0.,s,0.,c);
-      // Regularize the generated tube without changing its motion or topology.
-      vec2 radial=normalize(position.xy);
-      float tubeAngle=atan(position.z,length(position.xy)-.946);
-      vec3 smoothPosition=vec3(radial*(.946+.052*cos(tubeAngle)),.052*sin(tubeAngle));
-      vec3 p=rotation*smoothPosition*.59;
-      vec2 center=vec2(-.08+pointer.x*.35,.16-pointer.y*.05);
+      vec3 p=rotation*position*.59;
+      vec2 center=vec2(pointer.x*.27,.16-pointer.y*.05);
       float cameraZ=p.z-2.8;
       gl_Position=vec4((p.xy+center)*2.8,-1.020202*cameraZ-.20202,-cameraZ);
     }`));
@@ -49,10 +45,12 @@ export function createRingRenderer(gl, buffer) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   const framebuffer = gl.createFramebuffer(), depth = gl.createRenderbuffer();
+  const maxSize=Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE),gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
   let size = 0;
   return {
     texture,
     render(width, x, y) {
+      width=Math.min(width*2,maxSize);
       gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
       if (size !== width) {
         size = width;
