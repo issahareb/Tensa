@@ -51,6 +51,7 @@
     "CSS fallback if WebGL unavailable"
   ],
   "logo_lighting": "Local horizontal gradient: stronger left half for left light, stronger right half for right light, remaining half faint; center nearly invisible. Garment contour lighting unchanged.",
-  "drop_status": "Decorative segmented loading animation at the lower hoodie; reaches 72% and holds. Not connected to network loading.",
-  "visible_controls": "Move to discover on desktop, Swipe to discover on touch; no visible range slider or direction labels"
+  "drop_status": "Single luminous loading bar directly under the one-line invitation. Fill and counter ease to 72% in 3.2 seconds, then hold. Not connected to network loading.",
+  "visible_controls": "Move to discover on desktop, Swipe to discover on touch; no visible range slider or direction labels",
+  "wordmark": "Original clean TENSA. text retained after user rejected the generated wordmark study."
 }

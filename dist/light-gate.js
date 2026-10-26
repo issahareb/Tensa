@@ -68,7 +68,7 @@ function fallbackRenderer(){
 
 function initialiseTexture(image,ringBuffer){
   try {
-    const gl = canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:false});
+    const gl = canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:true});
     if(!gl)throw Error('WebGL unavailable');
     const compile=(type,source)=>{const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error('Shader compilation failed');return shader};
     const program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Shader link failed');gl.useProgram(program);
@@ -133,6 +133,25 @@ reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;
 addEventListener('resize',requestRender);motionState();
 const loadImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});
 Promise.all([loadImage('/assets/light/hoodie.webp'),fetch('/assets/light/ring.glb?v=smooth-3').then(r=>{if(!r.ok)throw Error('Ring unavailable');return r.arrayBuffer()})]).then(([hoodie,ring])=>initialiseTexture(hoodie,ring)).catch(()=>{scene.classList.add('scene-loaded');renderLight=fallbackRenderer();update()});
+
+// Decorative prelaunch status: count and light sweep ease to 72%, then hold.
+const dropLoader=document.querySelector('.drop-loader');
+const dropNumber=document.querySelector('.load-number');
+let dropFrame=0;
+function setDropProgress(value){dropLoader.style.setProperty('--progress',String(value/100));dropNumber.textContent=String(Math.round(value))}
+function startDropCharge(){
+  cancelAnimationFrame(dropFrame);
+  if(reducedQuery.matches){setDropProgress(72);return}
+  const started=performance.now();
+  function charge(now){
+    const t=Math.min(1,(now-started)/3200),eased=1-Math.pow(1-t,3);
+    setDropProgress(72*eased);
+    if(t<1)dropFrame=requestAnimationFrame(charge);
+  }
+  dropFrame=requestAnimationFrame(charge);
+}
+reducedQuery.addEventListener('change',()=>{cancelAnimationFrame(dropFrame);setDropProgress(72)});
+startDropCharge();
 
 const status=document.querySelector('#formStatus');
 const confirmation=new URLSearchParams(location.search).get('confirmation');
