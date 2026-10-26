@@ -1,35 +1,43 @@
-import {createZipSequence} from '/zip-sequence.js?v=zip-2';
+import {createZipSequence} from '/zip-sequence.js?v=macro-3';
 const $=s=>document.querySelector(s),clamp=(v,min=0,max=1)=>Math.max(min,Math.min(max,v));
 const money=v=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(v);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),touch=matchMedia('(pointer:coarse)');
-const story=$('#zipStory'),garment=$('#garment'),handle=$('#zipGrab'),canvas=$('#zipCanvas'),hint=$('#grabHint');
-let sequence=null,progress=0,rendered=0,raf=0,drag=null,ready=false,zipStart=.30,zipEnd=.835;
-let geometry={top:0,distance:1,size:600,travel:140};
-function measure(){const rect=story.getBoundingClientRect();geometry.top=scrollY+rect.top;geometry.distance=Math.max(1,story.offsetHeight-document.querySelector('.zip-stage').offsetHeight);geometry.size=garment.offsetWidth;geometry.travel=Math.max(65,geometry.size*(zipEnd-zipStart-.30));requestRender()}
+const story=$('#zipStory'),stage=$('.zip-stage'),garment=$('#garment'),handle=$('#zipGrab'),canvas=$('#zipCanvas'),hint=$('#grabHint');
+const ZIP_FINISH=.78;
+let sequence=null,rendered=0,raf=0,drag=null,ready=false,resizePending=false;
+let geometry={top:0,distance:1,width:1,height:1,size:600,anchorX:0,anchorY:0,travel:280};
+function measure(){if(drag){resizePending=true;return}const w=stage.clientWidth,h=stage.clientHeight,mobile=w<=700;geometry={top:scrollY+story.getBoundingClientRect().top,distance:Math.max(1,story.offsetHeight-h),width:w,height:h,size:mobile?Math.min(w*1.48,680):Math.min(h*.94,w<=1100?790:870),anchorX:w*(mobile?.5:w<=1100?.58:.54),anchorY:0,travel:Math.min(285,h*.34)};geometry.anchorY=h*(mobile?.20:.12)+geometry.size*(sequence?.manifest.tracks?.[0]?.[1]??.303);geometry.finalSize=Math.min(Math.max(w,h)*1.25,h*1.8);const endY=sequence?.manifest.tracks?.at(-1)?.[1]??.508;geometry.travel=Math.max(60,Math.min(geometry.travel,(h-24-geometry.finalSize*(.73-endY)-geometry.anchorY)/ZIP_FINISH));sequence?.resize(w,h);resizePending=false;requestRender()}
 function target(){return reduced.matches?0:clamp((scrollY-geometry.top)/geometry.distance)}
 function requestRender(){if(!raf)raf=requestAnimationFrame(render)}
-function render(){raf=0;progress=target();rendered=drag||reduced.matches?progress:rendered+(progress-rendered)*.25;if(Math.abs(rendered-progress)<.0004)rendered=progress;
-  story.style.setProperty('--zip-progress',rendered.toFixed(4));garment.style.transform=`translate(-50%,${-rendered*geometry.size*.30}px)`;
-  const zipY=zipStart+(zipEnd-zipStart)*rendered;handle.style.top=`${zipY*100}%`;hint.style.top=`${zipY*100}%`;hint.style.opacity=rendered>.08?'0':'1';handle.style.opacity=rendered>.995?'.35':'1';
-  handle.setAttribute('aria-valuenow',String(Math.round(rendered*100)));handle.setAttribute('aria-valuetext',rendered>.99?'Am unteren Anschlag, verbunden':`${Math.round(rendered*100)} Prozent geöffnet`);
-  $('#zipPercent').textContent=String(Math.round(rendered*100)).padStart(2,'0');$('.shop-header').classList.toggle('scrolled',scrollY>60);
-  if(sequence&&!reduced.matches)sequence.draw(rendered);if(rendered!==progress)requestRender();
+function render(){raf=0;const wanted=reduced.matches?0:drag?clamp(drag.progress):target();rendered=drag||reduced.matches?wanted:rendered+(wanted-rendered)*.22;if(Math.abs(rendered-wanted)<.0003)rendered=wanted;
+  const film=clamp(rendered/ZIP_FINISH),ease=film*film*(3-2*film);
+  const anchorX=geometry.anchorX;
+  const anchorY=geometry.anchorY+Math.min(rendered,ZIP_FINISH)*geometry.travel;
+  const size=geometry.size+(geometry.finalSize-geometry.size)*ease;
+  story.style.setProperty('--zip-progress',film.toFixed(4));story.dataset.phase=rendered>=ZIP_FINISH?'hold':'zip';
+  handle.style.left=`${anchorX}px`;handle.style.top=`${anchorY}px`;hint.style.left=`${anchorX+48}px`;hint.style.top=`${anchorY}px`;hint.style.opacity=film>.05?'0':'1';
+  handle.style.opacity=film>.99?'.25':'1';handle.setAttribute('aria-valuenow',String(Math.round(film*100)));handle.setAttribute('aria-valuetext',film>=1?'Unterer Anschlag. Nahaufnahme. Weiterziehen oder weiterscrollen zum Produkt.':`${Math.round(film*100)} Prozent geöffnet`);
+  $('#zipPercent').textContent=String(Math.round(film*100)).padStart(2,'0');$('.shop-header').classList.toggle('scrolled',scrollY>60);
+  $('#zipHoldHint').classList.toggle('visible',rendered>=ZIP_FINISH&&rendered<.995);
+  if(sequence&&!reduced.matches&&sequence.draw(film,{anchorX,anchorY,size}))garment.classList.add('sequence-ready');
+  // During a gesture the finger is authoritative. Scroll events never feed
+  // back into its progress, and browser toolbar resize waits until release.
+  if(drag){const top=geometry.top+drag.progress*geometry.distance;if(Math.abs(scrollY-top)>.5)window.scrollTo({top,behavior:'instant'})}
+  if(rendered!==wanted)requestRender();
 }
 function go(p){window.scrollTo({top:geometry.top+clamp(p)*geometry.distance,behavior:'instant'});requestRender()}
-handle.addEventListener('pointerdown',e=>{if(reduced.matches||!ready||e.button>0)return;e.preventDefault();handle.setPointerCapture(e.pointerId);drag={id:e.pointerId,y:e.clientY,start:target()};handle.classList.add('dragging');requestRender()});
-handle.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;e.preventDefault();go(drag.start+(e.clientY-drag.y)/geometry.travel)});
-function release(e){if(drag&&(!e||e.pointerId===drag.id)){drag=null;handle.classList.remove('dragging');requestRender()}}
+handle.addEventListener('pointerdown',e=>{if(reduced.matches||!ready||e.button>0)return;e.preventDefault();handle.setPointerCapture(e.pointerId);const start=target();rendered=start;drag={id:e.pointerId,y:e.clientY,start,progress:start,travel:geometry.travel};handle.classList.add('dragging');requestRender()});
+handle.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;e.preventDefault();const sample=e.getCoalescedEvents?.().at(-1)||e;drag.progress=clamp(drag.start+(sample.clientY-drag.y)/drag.travel,0,1.65);requestRender()});
+function release(e){if(!drag||e&&e.pointerId!==drag.id)return;const finalProgress=drag.progress;window.scrollTo({top:geometry.top+finalProgress*geometry.distance,behavior:'instant'});rendered=clamp(finalProgress);drag=null;handle.classList.remove('dragging');if(resizePending)measure();requestRender()}
 handle.addEventListener('pointerup',release);handle.addEventListener('pointercancel',release);handle.addEventListener('lostpointercapture',release);
-handle.addEventListener('keydown',e=>{const next={ArrowDown:target()+.06,ArrowRight:target()+.06,ArrowUp:target()-.06,ArrowLeft:target()-.06,PageDown:target()+.2,PageUp:target()-.2,Home:0,End:1};if(e.key in next){e.preventDefault();go(next[e.key])}});
-let viewportWidth=innerWidth;
-addEventListener('scroll',requestRender,{passive:true});addEventListener('resize',()=>{if(innerWidth!==viewportWidth){drag=null;viewportWidth=innerWidth}measure()});
-function motionPreference(){hint.firstChild.textContent=touch.matches?'ZIEH DEN ZIPPER ':'SCROLL ZUM ÖFFNEN ';measure();if(!reduced.matches&&!sequence)loadSequence()}
+handle.addEventListener('keydown',e=>{const next={ArrowDown:target()+.04,ArrowRight:target()+.04,ArrowUp:target()-.04,ArrowLeft:target()-.04,PageDown:target()+.15,PageUp:target()-.15,Home:0,End:1};if(e.key in next){e.preventDefault();go(next[e.key])}});
+addEventListener('scroll',()=>{if(!drag)requestRender()},{passive:true});addEventListener('resize',measure);
+function motionPreference(){if(reduced.matches&&drag)release();hint.firstChild.textContent=touch.matches?'ZIEH DEN ZIPPER ':'SCROLL ZUM ÖFFNEN ';measure();if(!reduced.matches&&!sequence)loadSequence()}
 reduced.addEventListener('change',motionPreference);touch.addEventListener('change',motionPreference);
 let sequenceStarted=false;
-async function loadSequence(){if(sequenceStarted)return;sequenceStarted=true;try{sequence=await createZipSequence(canvas,m=>{if(!m){unavailable();return}ready=true;zipStart=m.zipStart;zipEnd=m.zipEnd;garment.classList.add('sequence-ready');$('#zipReadiness').textContent='';measure()},requestRender);requestRender()}catch{unavailable()}}
+async function loadSequence(){if(sequenceStarted)return;sequenceStarted=true;const statusTimer=setTimeout(()=>{$('#zipReadiness').textContent='Ein Moment. Dein Drop wird vorbereitet.'},700);try{sequence=await createZipSequence(canvas,m=>{clearTimeout(statusTimer);if(!m){unavailable();return}ready=true;$('#zipReadiness').textContent='';measure()},requestRender);measure()}catch{clearTimeout(statusTimer);unavailable()}}
 function unavailable(){story.classList.add('sequence-unavailable');$('#zipReadiness').textContent='Entdecke alle Bilder und Details weiter unten.'}
-handle.setAttribute('aria-description','Der Reißverschluss bleibt am unteren Ende verbunden. Alternativ direkt zum Produkt springen.');motionPreference();
-// Native links remain usable without JavaScript; with motion enabled they ease to details.
+handle.setAttribute('aria-description','Ziehen zoomt auf den Zipper. Am unteren Anschlag bleibt die Nahaufnahme stehen. Weiterziehen oder weiterscrollen führt zum Produkt.');motionPreference();
 document.querySelectorAll('a[href="#product"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();$('#product').scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'})}));
 
 let config={},selectedSize=null,items=[];const validSizes=['XS','S','M','L','XL'];

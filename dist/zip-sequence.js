@@ -1,47 +1,36 @@
-// Decode only a small window, retaining sparse anchor frames for fast scrubbing.
-// The scroll position is the source of truth; no timed video playback or seek lag.
+// Directional, bounded frame renderer. Never replace a missing frame with an
+// image from the opposite side of the requested motion. No frame blending:
+// blending two zipper positions creates ghosting exactly on the metal detail.
 export async function createZipSequence(canvas,onReady,onRedraw){
-  const manifest=await fetch('/assets/shop/zip/manifest.json').then(r=>{if(!r.ok)throw Error('Sequence unavailable');return r.json()});
-  const ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});
-  if(!ctx)throw Error('Canvas unavailable');
+  const manifest=await fetch('/assets/shop/zip-macro/manifest.json?v=macro-3').then(r=>{if(!r.ok)throw Error('Sequence unavailable');return r.json()});
+  const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw Error('Canvas unavailable');
+  const coarse=matchMedia('(pointer:coarse)').matches,limit=coarse?14:18;
   const cache=new Map(),compressed=new Map(),pending=new Set(),queue=new Map();
-  const coarse=matchMedia('(pointer:coarse)').matches,limit=coarse?24:32;
-  // One compact transfer avoids a network round trip for every new finger
-  // position. Keep compressed bytes; decode only the bounded nearby window.
-  const pack=coarse&&manifest.mobilePack?manifest.mobilePack:manifest.pack;
-  if(pack){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);try{
-    const response=await fetch(pack,{signal:controller.signal});if(!response.ok)throw Error('Pack unavailable');
-    const buffer=await response.arrayBuffer(),view=new DataView(buffer);let offset=0;
-    for(let i=0;i<manifest.count;i++){const length=view.getUint32(offset,true);offset+=4;if(offset+length>buffer.byteLength)throw Error('Incomplete pack');compressed.set(i,new Blob([buffer.slice(offset,offset+length)],{type:'image/webp'}));offset+=length}
-  }catch{compressed.clear()}finally{clearTimeout(timeout)}}
-  const anchors=new Set([0,manifest.count-1]);
-  let current=0,clock=0,running=0,ready=false,disposed=false;
   const base=coarse&&manifest.mobileBase?manifest.mobileBase:manifest.base;
-  const url=i=>`${base}/${String(i).padStart(3,'0')}.webp`;
-  function evict(){while(cache.size>limit){const candidates=[...cache].filter(([i])=>!anchors.has(i)&&Math.abs(i-current)>3).sort((a,b)=>a[1].used-b[1].used);if(!candidates.length)break;const [i,item]=candidates[0];item.image.close?.();cache.delete(i)}}
-  async function decode(blob){if('createImageBitmap'in window)return createImageBitmap(blob);return new Promise((resolve,reject)=>{const image=new Image(),u=URL.createObjectURL(blob);image.onload=()=>{URL.revokeObjectURL(u);resolve(image)};image.onerror=()=>{URL.revokeObjectURL(u);reject(Error('Frame decode failed'))};image.src=u})}
-  function enqueue(i,priority=1){if(i<0||i>=manifest.count||cache.has(i)||pending.has(i))return;queue.set(i,Math.min(queue.get(i)??Infinity,priority));pump()}
-  function pump(){while(running<4&&queue.size&&!disposed){const next=[...queue].sort((a,b)=>a[1]-b[1]||Math.abs(a[0]-current)-Math.abs(b[0]-current))[0][0];queue.delete(next);pending.add(next);running++;
-    (async()=>{let blob=compressed.get(next);if(!blob){const r=await fetch(url(next));if(!r.ok)throw Error('Frame unavailable');blob=await r.blob();compressed.set(next,blob)}const image=await decode(blob);if(disposed){image.close?.();return}cache.set(next,{image,used:++clock});evict();if(!ready&&next===0){ready=true;onReady(manifest)}onRedraw()})().catch(()=>{if(next===0&&!ready){onReady(null)}}).finally(()=>{pending.delete(next);running--;pump()});
+  let requested=0,lastRequested=0,lastShown=0,direction=1,running=0,clock=0,ready=false,disposed=false;
+  let width=1,height=1,lastPaint='';
+  const pack=coarse&&manifest.mobilePack?manifest.mobilePack:manifest.pack;
+  if(pack){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(pack,{signal:controller.signal});if(!r.ok)throw Error('Pack unavailable');const buffer=await r.arrayBuffer(),view=new DataView(buffer);let offset=0;for(let i=0;i<manifest.count;i++){const length=view.getUint32(offset,true);offset+=4;if(offset+length>buffer.byteLength)throw Error('Incomplete pack');compressed.set(i,new Blob([buffer.slice(offset,offset+length)],{type:'image/webp'}));offset+=length}}catch{compressed.clear()}finally{clearTimeout(timeout)}}
+  function evict(){while(cache.size>limit){const candidates=[...cache].filter(([i])=>i!==lastShown&&i!==0&&i!==manifest.count-1&&Math.abs(i-requested)>2).sort((a,b)=>a[1].used-b[1].used);if(!candidates.length)break;const [i,item]=candidates[0];item.image.close?.();cache.delete(i)}}
+  async function decode(blob){if('createImageBitmap'in window)return createImageBitmap(blob);return new Promise((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(blob);image.onload=()=>{URL.revokeObjectURL(url);resolve(image)};image.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Frame decode failed'))};image.src=url})}
+  function enqueue(i,priority){if(i<0||i>=manifest.count||cache.has(i)||pending.has(i))return;queue.set(i,Math.min(queue.get(i)??Infinity,priority))}
+  function pump(){while(running<3&&queue.size&&!disposed){const next=[...queue].sort((a,b)=>a[1]-b[1]||Math.abs(a[0]-requested)-Math.abs(b[0]-requested))[0][0];queue.delete(next);pending.add(next);running++;
+    (async()=>{let blob=compressed.get(next);if(!blob){const r=await fetch(`${base}/${String(next).padStart(3,'0')}.webp`);if(!r.ok)throw Error('Frame unavailable');blob=await r.blob();compressed.set(next,blob)}const image=await decode(blob);if(disposed){image.close?.();return}cache.set(next,{image,used:++clock});evict();if(!ready&&next===0){ready=true;onReady(manifest)}onRedraw()})().catch(()=>{if(next===0&&!ready)onReady(null)}).finally(()=>{pending.delete(next);running--;pump()})
   }}
-  function draw(progress){
-    // Map physical slider displacement to source frames, removing the clip's
-    // initial hold and variable speed without detaching the target from the pull.
-    const target=manifest.zipStart+(manifest.zipEnd-manifest.zipStart)*progress;
-    const positions=manifest.positions;let index=0;
-    if(positions){while(index<positions.length-2&&positions[index+1]<target)index++;const span=positions[index+1]-positions[index];current=index+(span>0?Math.max(0,Math.min(1,(target-positions[index])/span)):0)}
-    else current=progress*(manifest.count-1);
-    current=Math.max(0,Math.min(manifest.count-1,current));const low=Math.floor(current),high=Math.min(manifest.count-1,low+1);
-    // Discard stale speculative decodes when the visitor jumps to another point.
-    for(const [i,priority]of queue)if(priority>0&&!anchors.has(i)&&Math.abs(i-current)>10)queue.delete(i);
-    enqueue(low,0);enqueue(high,0);for(let d=1;d<=5;d++){enqueue(low+d,d);enqueue(low-d,d)}
-    const rect=canvas.getBoundingClientRect(),size=Math.max(1,Math.min(1280,Math.round(rect.width*Math.min(devicePixelRatio,1.5))));if(canvas.width!==size){canvas.width=size;canvas.height=size}
-    const a=cache.get(low),b=cache.get(high);let nearest=a;if(!nearest)nearest=[...cache].sort((a,b)=>Math.abs(a[0]-current)-Math.abs(b[0]-current))[0]?.[1];if(!nearest)return;
-    nearest.used=++clock;ctx.globalAlpha=1;ctx.drawImage(nearest.image,0,0,size,size);
-    if(a&&b&&high!==low){b.used=++clock;ctx.globalAlpha=current-low;ctx.drawImage(b.image,0,0,size,size);ctx.globalAlpha=1}
-    canvas.dataset.frame=String(low);canvas.dataset.decoded=String(cache.size);
+  function resize(w,h){const dpr=Math.min(devicePixelRatio,2,2200/w),pixelW=Math.round(w*dpr),pixelH=Math.round(h*dpr);if(width===w&&height===h&&canvas.width===pixelW&&canvas.height===pixelH)return;width=w;height=h;canvas.width=pixelW;canvas.height=pixelH;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';lastPaint=''}
+  function draw(progress,view){const index=Math.max(0,Math.min(manifest.count-1,Math.round(progress*(manifest.count-1))));requested=index;if(index!==lastRequested)direction=Math.sign(index-lastRequested);lastRequested=index;
+    for(const [i,priority]of queue)if(priority>0&&i!==manifest.count-1&&Math.abs(i-index)>12)queue.delete(i);
+    enqueue(index,0);for(let d=1;d<=9;d++)enqueue(index+direction*d,d);for(let d=1;d<=3;d++)enqueue(index-direction*d,d+9);pump();
+    let chosen=cache.has(index)?index:lastShown;
+    if(!cache.has(index)){const available=[...cache.keys()].filter(i=>direction>0?i>=lastShown&&i<=index:i<=lastShown&&i>=index);if(available.length)chosen=direction>0?Math.max(...available):Math.min(...available)}
+    const item=cache.get(chosen);if(!item)return null;lastShown=chosen;item.used=++clock;
+    const track=manifest.tracks?.[chosen]||[.5,manifest.positions?.[chosen]??(.303+.554*chosen/(manifest.count-1))];
+    const x=view.anchorX-track[0]*view.size,y=view.anchorY-track[1]*view.size;
+    const key=[chosen,width,height,x.toFixed(2),y.toFixed(2),view.size.toFixed(2)].join(':');
+    if(key!==lastPaint){ctx.globalAlpha=1;ctx.fillStyle=manifest.background||'#d4cfc9';ctx.fillRect(0,0,width,height);ctx.drawImage(item.image,x,y,view.size,view.size);lastPaint=key}
+    canvas.dataset.frame=String(chosen);canvas.dataset.requestedFrame=String(index);canvas.dataset.decoded=String(cache.size);canvas.dataset.direction=String(direction);
+    return {frame:chosen,progress:chosen/(manifest.count-1),track};
   }
-  enqueue(0,0);enqueue(manifest.count-1,2);
-  for(let i=12;i<manifest.count;i+=12){anchors.add(i);enqueue(i,4)}
-  return {manifest,draw,destroy(){disposed=true;queue.clear();for(const item of cache.values())item.image.close?.();cache.clear();compressed.clear()}};
+  enqueue(0,0);for(let i=1;i<=8;i++)enqueue(i,i);enqueue(manifest.count-1,20);pump();
+  return {manifest,draw,resize,destroy(){disposed=true;queue.clear();for(const item of cache.values())item.image.close?.();cache.clear();compressed.clear()}};
 }
