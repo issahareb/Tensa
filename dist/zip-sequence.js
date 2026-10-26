@@ -6,6 +6,14 @@ export async function createZipSequence(canvas,onReady,onRedraw){
   if(!ctx)throw Error('Canvas unavailable');
   const cache=new Map(),compressed=new Map(),pending=new Set(),queue=new Map();
   const coarse=matchMedia('(pointer:coarse)').matches,limit=coarse?24:32;
+  // One compact transfer avoids a network round trip for every new finger
+  // position. Keep compressed bytes; decode only the bounded nearby window.
+  const pack=coarse&&manifest.mobilePack?manifest.mobilePack:manifest.pack;
+  if(pack){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);try{
+    const response=await fetch(pack,{signal:controller.signal});if(!response.ok)throw Error('Pack unavailable');
+    const buffer=await response.arrayBuffer(),view=new DataView(buffer);let offset=0;
+    for(let i=0;i<manifest.count;i++){const length=view.getUint32(offset,true);offset+=4;if(offset+length>buffer.byteLength)throw Error('Incomplete pack');compressed.set(i,new Blob([buffer.slice(offset,offset+length)],{type:'image/webp'}));offset+=length}
+  }catch{compressed.clear()}finally{clearTimeout(timeout)}}
   const anchors=new Set([0,manifest.count-1]);
   let current=0,clock=0,running=0,ready=false,disposed=false;
   const base=coarse&&manifest.mobileBase?manifest.mobileBase:manifest.base;

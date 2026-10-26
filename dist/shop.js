@@ -1,4 +1,4 @@
-import {createZipSequence} from '/zip-sequence.js?v=zip-1';
+import {createZipSequence} from '/zip-sequence.js?v=zip-2';
 const $=s=>document.querySelector(s),clamp=(v,min=0,max=1)=>Math.max(min,Math.min(max,v));
 const money=v=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(v);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),touch=matchMedia('(pointer:coarse)');
