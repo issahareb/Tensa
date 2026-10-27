@@ -1,0 +1,217 @@
+{
+  "provider": "Higgsfield",
+  "status": "implemented",
+  "referenceMedia": [
+    "1cde7a8d-b053-415a-b1c4-ff2ae10573bf",
+    "7bd3689a-7968-4097-8a4e-69cf43dfa6f5",
+    "63ba9f4d-3afe-400f-a196-956820fb4611"
+  ],
+  "images": [
+    {
+      "index": 0,
+      "job_id": "ffa18633-e352-4b8a-8ea1-eb74ea6134f0",
+      "status": "completed",
+      "type": "image",
+      "model": "nano_banana_2",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261027_161819_ffa18633-e352-4b8a-8ea1-eb74ea6134f0.png",
+      "webWidth": 1600,
+      "zoomWidth": 3200
+    },
+    {
+      "index": 1,
+      "job_id": "ee659214-a32c-45d0-b376-58f74e15c7cc",
+      "status": "completed",
+      "type": "image",
+      "model": "nano_banana_2",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261027_161819_ee659214-a32c-45d0-b376-58f74e15c7cc.png",
+      "webWidth": 1600,
+      "zoomWidth": 3200
+    },
+    {
+      "index": 2,
+      "job_id": "93a9843e-998a-463d-85f8-947e89d653c6",
+      "status": "completed",
+      "type": "image",
+      "model": "nano_banana_2",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261027_161819_93a9843e-998a-463d-85f8-947e89d653c6.png",
+      "webWidth": 1600,
+      "zoomWidth": 3200
+    },
+    {
+      "index": 3,
+      "job_id": "87df6ffa-8f27-454b-bfec-dbd24e6e0a4e",
+      "status": "completed",
+      "type": "image",
+      "model": "nano_banana_2",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261027_162052_87df6ffa-8f27-454b-bfec-dbd24e6e0a4e.png",
+      "webWidth": 1600,
+      "zoomWidth": 3200
+    },
+    {
+      "index": 4,
+      "job_id": "9b667aa7-2131-4276-99f9-036d81123135",
+      "status": "completed",
+      "type": "image",
+      "model": "nano_banana_2",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261027_162052_9b667aa7-2131-4276-99f9-036d81123135.png",
+      "webWidth": 1600,
+      "zoomWidth": 3200
+    }
+  ],
+  "imageRequests": [
+    {
+      "index": 0,
+      "params": {
+        "model": "nano_banana_pro",
+        "resolution": "4k",
+        "aspect_ratio": "1:1",
+        "medias": [
+          {
+            "role": "image_references",
+            "value": "1cde7a8d-b053-415a-b1c4-ff2ae10573bf"
+          },
+          {
+            "role": "image_references",
+            "value": "7bd3689a-7968-4097-8a4e-69cf43dfa6f5"
+          },
+          {
+            "role": "image_references",
+            "value": "63ba9f4d-3afe-400f-a196-956820fb4611"
+          }
+        ],
+        "prompt": "Create a photoreal luxury e-commerce photograph of this EXACT TENSA washed-black full-zip cotton hoodie, using the references as strict garment specifications. Preserve the oversized cut, hood, split kangaroo pockets, ribbed hem/cuffs, silver zipper, small tonal dark-grey elephant TENSA embroidery on the wearer left chest, and low-contrast charcoal architectural double-arch city/palm backprint. Do not redesign or enhance the graphic, no white print, no new labels, no extra logos or text. Crisp true cotton weave, realistic soft folds, restrained contrast, neutral softbox light. Warm light-grey seamless studio background #d4cfc9. No props, no people, no hanger, no collage or inset. Full garment must remain inside the frame with generous margins. Straight-on FRONT view, perfectly centered single hoodie, invisible mannequin product styling with natural garment volume. Zipped closed. Hood relaxed and open, chest embroidery subtle and correctly sized, zipper sharp. Garment spans 76% of image height. Soft grounding shadow. 85mm product lens. This is the hero starting photograph."
+      }
+    },
+    {
+      "index": 1,
+      "params": {
+        "model": "nano_banana_pro",
+        "resolution": "4k",
+        "aspect_ratio": "1:1",
+        "medias": [
+          {
+            "role": "image_references",
+            "value": "1cde7a8d-b053-415a-b1c4-ff2ae10573bf"
+          },
+          {
+            "role": "image_references",
+            "value": "7bd3689a-7968-4097-8a4e-69cf43dfa6f5"
+          },
+          {
+            "role": "image_references",
+            "value": "63ba9f4d-3afe-400f-a196-956820fb4611"
+          }
+        ],
+        "prompt": "Create a photoreal luxury e-commerce photograph of this EXACT TENSA washed-black full-zip cotton hoodie, using the references as strict garment specifications. Preserve the oversized cut, hood, split kangaroo pockets, ribbed hem/cuffs, silver zipper, small tonal dark-grey elephant TENSA embroidery on the wearer left chest, and low-contrast charcoal architectural double-arch city/palm backprint. Do not redesign or enhance the graphic, no white print, no new labels, no extra logos or text. Crisp true cotton weave, realistic soft folds, restrained contrast, neutral softbox light. Warm light-grey seamless studio background #d4cfc9. No props, no people, no hanger, no collage or inset. Full garment must remain inside the frame with generous margins. Straight-on BACK view, perfectly centered single hoodie, invisible mannequin product styling with natural garment volume. Hood resting naturally, exact subtle dark charcoal backprint visible. Garment spans 76% of image height. Same centered framing, camera height and soft grounding shadow as a straight-on front catalogue photograph. 85mm product lens."
+      }
+    },
+    {
+      "index": 2,
+      "params": {
+        "model": "nano_banana_pro",
+        "resolution": "4k",
+        "aspect_ratio": "1:1",
+        "medias": [
+          {
+            "role": "image_references",
+            "value": "1cde7a8d-b053-415a-b1c4-ff2ae10573bf"
+          },
+          {
+            "role": "image_references",
+            "value": "7bd3689a-7968-4097-8a4e-69cf43dfa6f5"
+          },
+          {
+            "role": "image_references",
+            "value": "63ba9f4d-3afe-400f-a196-956820fb4611"
+          }
+        ],
+        "prompt": "Photoreal macro product photograph of the exact TENSA washed-black full-zip cotton hoodie in these references. Close view of chest including the silver zipper at left of frame and the small tonal charcoal elephant TENSA embroidered chest logo at right. Preserve exact logo shape/lettering and real stitch construction. Fill the frame with softly folded dark cotton, show clean embroidery threads and metal zipper teeth in sharp detailed focus. Subtle soft directional daylight, matte washed black fabric, low-contrast grey thread, not bright white. No hands, no objects, no extra text, no collage, no CGI/plastic. Luxury fashion detail photography, 100mm macro lens."
+      }
+    },
+    {
+      "index": 3,
+      "params": {
+        "model": "nano_banana_pro",
+        "resolution": "4k",
+        "aspect_ratio": "3:4",
+        "medias": [
+          {
+            "role": "image_references",
+            "value": "ffa18633-e352-4b8a-8ea1-eb74ea6134f0"
+          },
+          {
+            "role": "image_references",
+            "value": "ee659214-a32c-45d0-b376-58f74e15c7cc"
+          },
+          {
+            "role": "image_references",
+            "value": "1cde7a8d-b053-415a-b1c4-ff2ae10573bf"
+          }
+        ],
+        "prompt": "High-end photoreal fashion campaign for TENSA. Dress the adult model in the EXACT washed-black oversized zip hoodie from the supplied references. Strictly preserve the cut, pockets, ribbing, metal zipper, small tonal dark-grey elephant TENSA chest embroidery, and original low-contrast charcoal architectural backprint. Do not make graphics white or add branding. No invented slogans. Real cotton texture, natural drape and anatomy. Warm light-grey seamless studio, subtle directional daylight, restrained neutral colours, editorial 85mm lens, crisp garment detail, realistic skin, quiet confident mood, full outfit with generous head/foot margins. No props, no collage, no captions. One adult male fashion model, mid twenties, short dark hair, wearing the hoodie fully zipped and relaxed wide-leg black trousers with simple unbranded dark shoes. Facing camera, slight relaxed weight shift, arms naturally down, hands clear of chest emblem. Understated confident expression. The hoodie is the focus. No jewelry."
+      }
+    },
+    {
+      "index": 4,
+      "params": {
+        "model": "nano_banana_pro",
+        "resolution": "4k",
+        "aspect_ratio": "3:4",
+        "medias": [
+          {
+            "role": "image_references",
+            "value": "ffa18633-e352-4b8a-8ea1-eb74ea6134f0"
+          },
+          {
+            "role": "image_references",
+            "value": "ee659214-a32c-45d0-b376-58f74e15c7cc"
+          },
+          {
+            "role": "image_references",
+            "value": "1cde7a8d-b053-415a-b1c4-ff2ae10573bf"
+          }
+        ],
+        "prompt": "High-end photoreal fashion campaign for TENSA. Dress the adult model in the EXACT washed-black oversized zip hoodie from the supplied references. Strictly preserve the cut, pockets, ribbing, metal zipper, small tonal dark-grey elephant TENSA chest embroidery, and original low-contrast charcoal architectural backprint. Do not make graphics white or add branding. No invented slogans. Real cotton texture, natural drape and anatomy. Warm light-grey seamless studio, subtle directional daylight, restrained neutral colours, editorial 85mm lens, crisp garment detail, realistic skin, quiet confident mood, full outfit with generous head/foot margins. No props, no collage, no captions. One adult female fashion model, mid twenties, dark hair tied into a neat high bun above the hood, wearing the hoodie and relaxed black trousers with simple unbranded dark shoes. BACK VIEW with slight head turn to side; body square to camera so the double-arch backprint is entirely visible. Arms naturally relaxed at sides. Hood lies flat on upper back, no hair covering print. Understated fashion editorial, no jewelry."
+      }
+    }
+  ],
+  "film": {
+    "job_id": "53270b45-8648-4ccf-a79d-120bde9b9fa8",
+    "requested": {
+      "model": "kling3_0",
+      "mode": "4k",
+      "sound": "off",
+      "duration": 8,
+      "aspect_ratio": "1:1",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "ffa18633-e352-4b8a-8ea1-eb74ea6134f0"
+        },
+        {
+          "role": "end_image",
+          "value": "ee659214-a32c-45d0-b376-58f74e15c7cc"
+        }
+      ],
+      "prompt": "One uninterrupted luxury e-commerce product turntable shot of this exact washed-black TENSA zip hoodie. Start with the exact full FRONT product image, end with the exact full BACK image. The entire hoodie rotates smoothly 180 degrees clockwise at a slow steady speed, as a real garment on an invisible mannequin. Locked camera, identical framing, scale, center and studio background throughout. Natural heavy cotton folds remain stable, very slight realistic fabric response only. Preserve exact silver zipper, closed front, pockets, tonal elephant chest embroidery and dark charcoal architecture backprint; no morphing or moving graphics. Soft neutral studio illumination stays constant, gentle contact shadow. The jacket never opens, no zipping action, no stretching, no warping, no extra sleeves, no scene cuts, no zoom, no camera travel, no hands, no body or visible stand, no text. Clean precise controlled product photography in motion. First 0.5 second holds frontal, smooth continuous turn over 7 seconds, last 0.5 second holds back view."
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261027_162110_53270b45-8648-4ccf-a79d-120bde9b9fa8.mp4",
+    "delivered": {
+      "width": 2880,
+      "height": 2880,
+      "fps": 24,
+      "duration": 8.041667
+    },
+    "web": {
+      "mobile": 960,
+      "desktop": 1600,
+      "encoding": "H.264 all-intra, serialized coalesced seeking into fixed canvas"
+    }
+  },
+  "preflightCredits": {
+    "images": 20,
+    "film": 48,
+    "total": 68
+  },
+  "note": "Credits are estimates from preflight, not a final billing statement. Image model requested nano_banana_pro; returned model nano_banana_2. Generated marketing imagery, not manufacturing geometry."
+}
