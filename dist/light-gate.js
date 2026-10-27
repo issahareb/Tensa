@@ -39,8 +39,8 @@ void main(){
   vec3 normal=normalize(vec3(p.x*2.8+(tL-tR)*1.7,p.y*.25+(tB-tT)*1.7,.78));
   float diffuse=max(dot(normal,lightDirection),0.);
   float facingEdge=max(dot(edgeNormal,normalize(vec2(light.x+0.0001,-light.y*.2))),0.);
-  // The body stays a black silhouette. Only the outer edge and a faint
-  // embroidered-logo contour respond to side lighting.
+  // A restrained frontal fill reveals the zipper and cotton even with the ring
+  // behind the garment. Side lighting adds form without washing out the black.
   float rim=edge*(.04*(1.-side)+.27*facingEdge*side);
   float fabric=dot(cloth.rgb,vec3(.3333));
   float logoMask=1.-smoothstep(.82,1.,length((uv-vec2(.62,.58))/vec2(.049,.061)));
@@ -48,7 +48,8 @@ void main(){
   float logoRight=smoothstep(.589,.651,uv.x);
   float illuminatedHalf=mix(1.-logoRight,logoRight,step(0.,light.x));
   float logoLight=logoMask*logoContour*side*(.012+.115*illuminatedHalf);
-  vec3 product=vec3(.004+fabric*(.003+diffuse*.014)+rim+logoLight);
+  float sideFill=side*(.012+.022*mix(1.-uv.x,uv.x,step(0.,light.x)));
+  vec3 product=vec3(.010+fabric*(.22+diffuse*.48)+sideFill+rim+logoLight*.75);
   gl_FragColor=vec4(mix(background,product,cloth.a)+vec3(bloom),1.);
 }`;
 
@@ -56,12 +57,12 @@ function fallbackRenderer(){
   const wrap = document.querySelector('.scene-fallback');
   const base = wrap.querySelector(':scope > img');
   const lit = base.cloneNode();
-  lit.style.cssText='position:absolute;inset:0;filter:grayscale(1) brightness(.07);opacity:0;';
+  lit.style.cssText='position:absolute;inset:0;filter:grayscale(1) brightness(.60);opacity:0;';
   wrap.append(lit);
   const ring = wrap.querySelector('i');
   return (lx,ly)=>{
     ring.style.transform=`translate(${lx*37}%,${ly*5}%) scaleX(${1-Math.abs(lx)*.35})`;
-    lit.style.opacity=String(Math.abs(lx)*.35);
+    lit.style.opacity=String(.12+Math.abs(lx)*.38);
     lit.style.maskImage=`linear-gradient(${lx<0?'90':'270'}deg,black,transparent 85%)`;
   };
 }
