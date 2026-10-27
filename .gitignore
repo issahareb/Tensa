@@ -3,3 +3,5 @@ data/
 .env
 .env.*
 !.env.example
+
+production/hoodie/tripo-out/

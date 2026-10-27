@@ -4,27 +4,26 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#d4cfc9"><meta name="description" content="TENSA. Drop 001. Entdecke den Washed Zip Hoodie aus 100 % Baumwolle mit tonalem Elefantenstick und Architektur-Backprint.">
   <title>TENSA. — The Washed Zip / Drop 001</title>
-  <link rel="stylesheet" href="/shop.css?v=macro-3"><link rel="preload" as="image" href="/assets/shop/front.webp">
+  <link rel="stylesheet" href="/shop.css?v=store-3d-1"><link rel="preload" as="image" href="/assets/shop/front.webp">
 </head>
 <body>
   <header class="shop-header">
     <a href="/shop" class="shop-wordmark" aria-label="TENSA Shop">TENSA.</a>
-    <nav aria-label="Shop"><a href="#product">DROP 001</a><a href="/gate">EARLY ACCESS ↗</a></nav>
+    <nav aria-label="Shop"><a href="#product">SHOP</a><a href="#story">DIE DETAILS</a></nav>
     <button class="bag-toggle" id="openCart" aria-haspopup="dialog">BAG <span id="cartCount">0</span><svg width="16" height="18" viewBox="0 0 16 18" fill="none" aria-hidden="true"><path d="M2 5h12l1 12H1L2 5ZM5 6V4a3 3 0 0 1 6 0v2" stroke="currentColor"/></svg></button>
   </header>
   <main>
-    <section class="zip-story" id="zipStory" aria-label="Entdecke den Hoodie mit dem Reißverschluss">
+    <section class="zip-story" id="zipStory" aria-label="Der TENSA Zip Hoodie in 3D">
       <div class="zip-stage">
-        <div class="hero-copy"><p class="micro">TENSA. / FIRST RELEASE</p><h1>THE <br>WASHED <br><span>ZIP.</span></h1><p class="hero-edition">Ein Produkt. Unser Anfang.</p></div>
+        <div class="hero-copy"><p class="micro">TENSA. / FIRST RELEASE</p><h1>THE <br>WASHED <br><span>ZIP.</span></h1><p class="hero-edition">Washed Black. Unverkennbar TENSA.</p></div>
         <div class="garment" id="garment">
           <img class="zip-poster" src="/assets/shop/front.webp" alt="TENSA Washed Zip Hoodie, Vorderseite mit Elefantenstick" fetchpriority="high" width="1200" height="1200">
           <canvas id="zipCanvas" aria-hidden="true"></canvas>
-          <button class="zip-grab" id="zipGrab" role="slider" aria-label="Reißverschluss öffnen. Ziehen oder Pfeiltasten benutzen." aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="grab-ring" aria-hidden="true"></span><span class="grab-arrow" aria-hidden="true">↓</span></button>
-          <span class="grab-hint" id="grabHint">SCROLL ZUM ÖFFNEN <span>↓</span></span>
+
         </div>
         <div class="hero-spec"><span class="micro">001 / WASHED BLACK</span><p>100 % Baumwolle.<br>Tonaler Stick.<br>Dein erstes Kapitel.</p></div>
-        <div class="hero-bottom"><span class="micro"><i class="status-dot"></i> THE FIRST DROP</span><a class="skip-link" href="#product">Direkt zum Produkt <span>↘</span></a><span class="zip-counter" aria-hidden="true"><b id="zipPercent">00</b> / 100</span></div>
-        <p class="zip-hold-hint" id="zipHoldHint">WEITER ZUM PRODUKT <span>↓</span></p>
+        <div class="hero-bottom"><span class="scroll-invitation"><span aria-hidden="true">↓</span> SCROLL TO EXPLORE</span><a class="skip-link" href="#product">Direkt zum Produkt <span>↘</span></a><span class="zip-counter" aria-hidden="true"><b id="zipPercent">FRONT</b> / 001</span></div>
+        <p class="zip-hold-hint" id="zipHoldHint">DEIN NÄCHSTES KAPITEL <span>↓</span></p>
         <div class="zip-readiness" id="zipReadiness" role="status"></div>
       </div>
     </section>
@@ -38,30 +37,33 @@
         </div>
         <div class="product-purchase">
           <p class="micro product-kicker">TENSA. — DROP 001</p><h2 id="productTitle">The Washed<br>Zip Hoodie.</h2>
-          <div class="price-line"><span id="price">Preis folgt</span><span id="releaseStatus">BALD VERFÜGBAR</span></div>
+          <div class="price-line"><span id="price">Preis folgt</span><span id="releaseStatus">WASHED BLACK</span></div>
           <p class="product-intro">Leise im Ton. Klar im Ausdruck. Washed Black, tonaler Elefantenstick und ein Backprint mit Geschichte.</p>
           <div class="option-label"><span>FARBE</span><span>Washed Black</span></div>
           <div class="color-row"><button class="color-swatch" aria-label="Washed Black ausgewählt" aria-pressed="true"><i></i></button><span>Weitere Farben folgen.</span></div>
           <div class="option-label"><span>GRÖSSE</span><a href="#fitDetails">Passform & Maße ↗</a></div>
           <div class="sizes" role="group" aria-label="Größe wählen"><button data-size="XS" aria-pressed="false">XS</button><button data-size="S" aria-pressed="false">S</button><button data-size="M" aria-pressed="false">M</button><button data-size="L" aria-pressed="false">L</button><button data-size="XL" aria-pressed="false">XL</button></div>
-          <p class="size-note">Größen vorläufig. Finale Maße und Verfügbarkeit folgen zum Launch.</p>
-          <button id="addBag" class="shop-cta"><span>Auswahl vormerken</span><span aria-hidden="true">↗</span></button>
-          <p id="productStatus" class="product-status" role="status" aria-live="polite">Wähle deine Größe für deine persönliche Bag.</p>
-          <a class="launch-note" href="/gate"><span>Zum Launch dabei sein.</span><span>15 % Early Access ↗</span></a>
+          <p class="size-note">Wähle deine Größe.</p>
+          <button id="addBag" class="shop-cta"><span>In den Warenkorb</span><span aria-hidden="true">↗</span></button>
+          <p id="productStatus" class="product-status" role="status" aria-live="polite"></p>
+          <div class="payment-methods" aria-label="Vorgesehene Zahlungsarten"><span>Apple Pay</span><span>Google Pay</span><span>Visa</span><span>Mastercard</span></div><p class="payment-note" id="paymentNote">Zahlungsarten werden an der Kasse angezeigt.</p>
           <div class="product-accordions">
             <details open><summary>Material & Details <span>+</span></summary><div><p>100 % Baumwolle. Washed-Black-Finish mit tonalem TENSA-Elefantenstick auf der Brust und Architekturprint auf der Rückseite.</p><ul><li>Durchgehender Reißverschluss</li><li>Kapuze und geteilte Fronttaschen</li><li>Gerippte Ärmelbündchen und Saum</li></ul></div></details>
-            <details id="fitDetails"><summary>Passform & Maße <span>+</span></summary><div><p>Die verbindliche Größentabelle und unsere Passformempfehlung folgen vor dem Verkaufsstart. Die angezeigten Größen sind Platzhalter.</p></div></details>
-            <details><summary>Versand & Rückgabe <span>+</span></summary><div><p>Lieferzeiten, Versandkosten und Rückgabebedingungen werden zum Launch ergänzt. Aktuell werden noch keine Bestellungen angenommen.</p></div></details>
+            <details id="fitDetails"><summary>Passform & Maße <span>+</span></summary><div><p id="sizeGuide">Die Größentabelle wird ergänzt. Die gezeigten Größen sind noch vorläufig.</p></div></details>
+            <details><summary>Versand & Rückgabe <span>+</span></summary><div><p id="shippingText">Versandangaben werden ergänzt.</p><p id="returnsText">Rückgabebedingungen werden ergänzt.</p></div></details>
           </div>
         </div>
       </div>
     </section>
-    <section class="back-story" aria-labelledby="backTitle"><div class="back-image"><img src="/assets/shop/back.webp" alt="Architektur-Backprint des TENSA Hoodies" loading="lazy" width="1100" height="1375"></div><div class="back-copy"><p class="micro">02 / ANOTHER PERSPECTIVE</p><h2>Vorne ein Zeichen.<br>Hinten eine<br>Geschichte.</h2><p>Architektur. Erinnerung. Bewegung.<br>Ein Motiv, das bleibt.</p><a href="#product" class="text-link">Den ersten Drop entdecken ↗</a></div></section>
-    <section class="shop-closing"><span class="micro">JUST THE BEGINNING.</span><p>TENSA.</p><a href="/gate">Sei dabei, wenn es passiert. <span>↗</span></a></section>
+    <section id="story" class="back-story" aria-labelledby="backTitle"><div class="back-image"><img src="/assets/shop/back.webp" alt="Architektur-Backprint des TENSA Hoodies" loading="lazy" width="1100" height="1375"></div><div class="back-copy"><p class="micro">02 / ANOTHER PERSPECTIVE</p><h2>Vorne ein Zeichen.<br>Hinten eine<br>Geschichte.</h2><p>Architektur. Erinnerung. Bewegung.<br>Ein Motiv, das bleibt.</p><a href="#product" class="text-link">Den ersten Drop entdecken ↗</a></div></section>
+    <section class="shop-closing"><span class="micro">JUST THE BEGINNING.</span><p>TENSA.</p><a href="#product">Finde deinen Fit. <span>↗</span></a></section>
   </main>
-  <footer class="shop-footer"><span>© TENSA.</span><span>DROP 001</span><nav aria-label="Rechtliches"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/gate">Early Access</a></nav></footer>
-  <dialog id="bag" class="bag-dialog" aria-labelledby="bagTitle"><div class="bag-heading"><span class="micro">TENSA. / DEINE AUSWAHL</span><button id="closeCart" class="close-button" aria-label="Bag schließen">×</button></div><h2 id="bagTitle">Your Bag.</h2><div id="bagItems"></div><p id="bagTotal"></p><p class="bag-disclaimer">Deine Auswahl ist auf diesem Gerät gespeichert. Keine Reservierung oder Bestellung. Der Verkauf startet erst mit dem Launch.</p><a class="shop-cta" href="/gate"><span>Launch-Benachrichtigung sichern</span><span>↗</span></a><button id="continueShopping" class="continue-button">Weiter entdecken</button></dialog>
+  <footer class="shop-footer"><span>© TENSA.</span><span>DROP 001</span><nav aria-label="Rechtliches"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><button class="service-link" data-service>Service & Zahlung</button></nav></footer>
+  <dialog id="bag" class="bag-dialog" aria-labelledby="bagTitle"><div class="bag-heading"><span class="micro">TENSA. / DEINE AUSWAHL</span><button id="closeCart" class="close-button" aria-label="Bag schließen">×</button></div><h2 id="bagTitle">Your Bag.</h2><div id="bagItems"></div><p id="bagTotal"></p><p class="bag-disclaimer">Versandkosten und verfügbare Zahlungsarten siehst du an der Kasse.</p><button class="shop-cta" id="checkoutButton"><span>Zur Kasse</span><span aria-hidden="true">↗</span></button><p id="checkoutStatus" class="product-status" role="status"></p><div class="payment-methods"><span>Apple Pay</span><span>Google Pay</span><span>Visa</span><span>Mastercard</span></div><button id="continueShopping" class="continue-button">Weiter entdecken</button></dialog>
+  <aside class="purchase-rail" id="purchaseRail" aria-label="Schnell zum Produkt" inert><span>The Washed Zip <small id="railPrice">Washed Black</small></span><a href="#product" class="rail-link">Größe wählen <span>↗</span></a></aside>
+  <dialog class="service-dialog" id="serviceDialog" aria-labelledby="serviceTitle"><button class="close-button" id="closeService" aria-label="Service schließen">×</button><p class="micro">TENSA. / SERVICE</p><h2 id="serviceTitle">Gut zu wissen.</h2><h3>Zahlung</h3><p>Apple Pay, Google Pay und Kartenzahlung sind für den Checkout vorgesehen. Die Kasse zeigt dir die auf deinem Gerät verfügbaren Zahlungsmethoden.</p><h3>Versand & Rückgabe</h3><p id="serviceShipping">Die verbindlichen Angaben werden ergänzt.</p><p id="serviceReturns"></p><a id="serviceContact" hidden>Kontakt aufnehmen ↗</a></dialog>
+  <div class="checkout-notice" id="checkoutNotice" role="status" hidden></div>
   <dialog id="imageDialog" class="image-dialog" aria-label="Produktbild in Großansicht"><button id="closeImage" class="close-button" aria-label="Großansicht schließen">×</button><img id="zoomImage" alt=""></dialog>
-  <script type="module" src="/shop.js?v=macro-3"></script>
+  <script type="module" src="/shop.js?v=store-3d-1"></script>
 </body>
 </html>

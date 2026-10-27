@@ -20,17 +20,35 @@ Launch mailing and coupon redemption are not yet connected to a checkout. No bul
 
 ## Owner studio and shop
 
-`/studio` supports password login, price, gate release/closure and confirmed-subscriber CSV export. The password is held in Railway variables as `ADMIN_PASSWORD`; view or replace it there. `/studio/light` previews the gate. `/shop` is an explicitly public preview; `/gate` is the prelaunch landing page. `/` redirects to `/gate` until owner release, then to `/shop`. Legacy `/product-media/*` remains protected. The shop includes a Higgsfield zipper sequence, gallery and zoom, provisional XS–XL sizes, 100% cotton information supplied by the owner, and a locally saved Bag. Prices are read from owner settings or shown as “Preis folgt”. The Bag is a saved selection, not a reservation; checkout remains pending. Releasing the gate alone does not send launch mail or activate payments.
+`/studio` supports password login, price, gate release/closure and confirmed-subscriber CSV export. `/shop` is the public store preview; `/` still routes to `/gate` until owner release. Root release does not activate payments or send mail. Final price, sizes/measurements, inventory, operator details, shipping and return terms remain owner inputs.
 
-## Zipper interaction
+The store has product gallery/zoom, size selection, persisted cart, purchase rail, service dialog and checkout action. No Early Access navigation or waitlist copy appears in the shop. When unconfigured, the checkout reports its unavailable state rather than claiming to accept payment. Original product photographs remain in the gallery.
 
-`private/shop.html`, `dist/shop.css`, `dist/shop.js`, `dist/zip-sequence.js`. The finger directly owns progress during a touch gesture; scroll events cannot feed back into it. Geometry stays fixed until release if browser chrome resizes. Desktop scroll uses the same progression. The renderer draws into a fixed viewport canvas and aligns each frame's tracked pull to the touch target. It presents decoded frames only toward the requested position, never alternating earlier/later fallback frames, and never blends two metal-pull positions. The canvas is not reset when its dimensions have not changed.
+## Native 3D scroll hero
 
-Higgsfield Kling 3.0 macro generation `80bdcadd-a08e-46c1-8bf3-9c9a0500d814`, requested in 4k mode; delivered 2880 × 2880 at 24 fps. The new film contains the zoom and sharply resolved final hardware instead of enlarging the old full-garment footage. Source frames 0–264 at step 2 become 133 WebP frames. Desktop uses 1600px frames; mobile uses 960px frames and a dedicated 1600px final hold image. A single compressed pack is loaded before interaction (6.3 MB mobile / 18.2 MB desktop); the server streams these files with bounded memory. Individual files are the fallback. The decoded cache is limited to 14 mobile / 18 desktop images, retaining the current presentation and end anchors. `dist/assets/shop/zip-macro/manifest.json` records smoothed per-frame tracking coordinates.
+`src/hoodie-scene.js` builds to `dist/hoodie-scene.js` with `npm run build:scene`. Three.js renders one resident GLB; browser-native scrolling drives a continuous front-to-back rotation and subtle camera move. There is no custom touch capture, programmatic scroll loop, frame cache or video seeking. Time-based damping settles to the requested angle; the renderer sleeps when settled or outside the viewport. Reduced motion and WebGL failure show the product photo in ordinary page flow.
 
-Zipper travel and zoom finish at 78% of the sticky section. The last 22% is a stationary macro hold: the same frame, scale and anchor remain unchanged. The product section follows the entire sticky section with no overlapping negative margin, so it appears only after further input. Dragging past the stop continues document scroll. Reduced motion uses a static photo and ordinary page flow.
+Tripo P1 (`P1-20260311`) multiview task `3c024118-b925-4782-bc73-ba5213d6f84d`, generated from the existing TENSA front/back product images. One step, **60 credits total**. Texture model `v3.5-20260815`, detailed quality, PBR, 17,906 triangles. Original 4096×4096 colour texture is preserved byte-for-byte; normal map is 2048px and ORM is 1024px to bound GPU memory. Runtime `dist/assets/shop/hoodie.glb`: approximately 6.7 MB. Build with `python3 production/prepare-hoodie.py SOURCE.glb dist/assets/shop/hoodie.glb`. Source GLB stays in ignored `production/hoodie/tripo-out`; task record and preview are archived in `production/source`. Generated geometry is a visual product approximation, not a manufacturing model or physical cloth simulation. The prior Higgsfield frame sequence is archived but no longer requested by the shop.
 
-Original film: `/workspace/scratch/zip-macro/source.mp4`. Rebuild with `node production/build-zip-sequence.mjs /path/to/macro-source.mp4`. Tracking diagnostics are archived in `production/source/zip-macro-tracking.json`. This remains generated product imagery, not a physical cloth/mechanical simulation.
+## Checkout setup (Stripe)
+
+`server/checkout.mjs` uses hosted Stripe Checkout. Card checkout includes Apple Pay / Google Pay when enabled in the merchant account and supported by the customer's browser/wallet; the storefront never draws a fake wallet payment button. Payment badges describe intended methods while setup is incomplete.
+
+Sales require all of:
+
+- `CHECKOUT_ENABLED=true`, owner gate released and final positive EUR price.
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_SHIPPING_RATE_ID` and HTTPS `PUBLIC_URL`.
+- `SHOP_OPERATOR`, `CONTACT_EMAIL`, `SHOP_SHIPPING_TEXT`, `SHOP_RETURNS_TEXT`.
+- `SHOP_STOCK_JSON` with final quantities for all five sizes, e.g. `{"XS":0,"S":0,"M":0,"L":0,"XL":0}`. Values seed SQLite only once; redeploys never reset sold stock. Do not use this example as actual inventory. Final sizes must be confirmed before selling.
+- `SHIPPING_COUNTRIES` (default DE); `SHOP_SIZE_GUIDE` for final measurements. Configure tax treatment, shipping rates, payment methods, receipts and policies in Stripe before enabling sales.
+
+Register `/api/checkout/webhook` in Stripe for `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`. Use test keys and a test webhook first. Do not put keys in client code or Git.
+
+The server owns prices, validates cart quantities/sizes, atomically reserves stock, and uses Stripe idempotency keys. The browser retains its checkout key across navigation. A verified paid webhook confirms the local order; the success URL alone does not. Expired sessions return stock exactly once. Paid order/size/quantity records are in SQLite `checkouts`; customer/shipping/payment details are in the Stripe Dashboard for fulfillment. No payment card data is stored by TENSA.
+
+An ambiguous network error keeps its reservation and retries with the same Stripe key. Rare pending sessions without a returned session id must be reconciled with Stripe metadata `tensa_checkout` before manually releasing stock; never restore stock blindly after a timeout. Use one Railway replica and back up the persistent volume.
+
+Stripe promotion-code entry is enabled. The prelaunch 15% subscriber codes are not automatically provisioned into Stripe yet; create/sync those codes before mailing the launch offer. No live account, charge, refund, fulfillment or launch mailing has been triggered by this implementation.
 
 ## Railway
 
