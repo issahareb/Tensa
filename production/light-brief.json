@@ -1,11 +1,11 @@
 {
   "status": "implemented",
-  "interaction": "pointer-driven 3D luminous ring, no scroll animation",
-  "layout": "fixed centered TENSA.; German invitation above foreground hoodie; compact signup right on desktop, below on mobile",
+  "interaction": "Pointer/touch-driven 3D luminous ring plus Higgsfield hoodie turn; no scroll animation",
+  "layout": "Larger readable desktop typography and signup; signup below the garment on mobile",
   "states": {
-    "center": "ring centered behind opaque near-black hoodie silhouette",
-    "left": "ring moves and rotates left, subtle left illumination",
-    "right": "ring moves and rotates right, subtle right illumination"
+    "center": "Front view and centered ring behind the garment; permanent subtle fill reveals cotton, zipper and logo",
+    "left": "Front view with stronger left light; no turn",
+    "right": "Smooth Higgsfield turn to approximately 115 degrees: side view with a partial view of the backprint. No full rear view. Ring and illumination follow right."
   },
   "hoodie": {
     "generator": "Higgsfield",
@@ -15,7 +15,19 @@
     ],
     "generation": "f39eec0d-bb0c-4e17-a68f-a0402d7a1901",
     "cutout": "f42af2a6-a5ca-4a54-9f80-994aec2b20a4",
-    "asset": "dist/assets/light/hoodie.webp"
+    "asset": "dist/assets/light/turn/front.webp",
+    "turn": {
+      "generation": "53270b45-8648-4ccf-a79d-120bde9b9fa8",
+      "source": "Higgsfield Kling 3.0 approved take, 0.75–3.8 seconds, ending near 115 degrees",
+      "frames": 48,
+      "background": "Neutral studio background removed with a connected-component matte; one fixed camera/crop",
+      "desktopResolution": 1280,
+      "mobileResolution": 896,
+      "restingPosters": 1600,
+      "transport": "All frames decoded before activation, four concurrent requests; only one GPU garment texture. No video seeking or asynchronous frame replacement during interaction.",
+      "mapping": "Center and left stay front. Right 0.12–0.94 maps to the side/rear three-quarter view at approximately 115 degrees, with rate limiting and exponential damping.",
+      "fallback": "Front view and ring remain usable on any frame failure or WebGL loss; reduced motion does not preload turn frames until explicit input."
+    }
   },
   "ring": {
     "generator": "Tripo CLI 0.7.3 / Tripo 3D plugin",
@@ -41,7 +53,7 @@
     "high_resolution_asset": "/workspace/tripo-assets/tensa-ring-source/tensa-ring-luminous-high.glb",
     "surface_cleanup": "Precision circular tube remesh using the generated normalized dimensions, 512 segments x 32 sides. Uniform white emission, 2x supersampled offscreen rendering and Gaussian bloom. No image texture or normal shading. Original Tripo source kept separately."
   },
-  "rendering": "3D ring with perspective and depth; photo-based garment stays near black with directional outer-edge lighting and a faint neutral logo silhouette. Mouse/touch motion unchanged.",
+  "rendering": "Actual perspective ring mesh with uniform emission and occlusion-aware bloom, masked by the current Higgsfield garment frame. Garment lighting uses permanent fill and a directional surface approximation; this is a pre-rendered turn, not realtime garment physics.",
   "discount": "15 percent for all registrations before launch; no count cap",
   "accessibility": [
     "keyboard arrows and Home on scene",
@@ -50,7 +62,7 @@
     "reduced motion",
     "CSS fallback if WebGL unavailable"
   ],
-  "logo_lighting": "Local horizontal gradient: stronger left half for left light, stronger right half for right light, remaining half faint; center nearly invisible. Garment contour lighting unchanged.",
+  "logo_lighting": "Front logo follows directional lighting while frontal; the extra logo-specific highlight fades before rotation to avoid a false fixed highlight on the moving body.",
   "drop_status": "Full-screen entrance: decorative counter eases to 72% while the scene loads, then the same bar travels onto the marked lower torso position above the pouch pocket (64% down the garment canvas). It stays at 72%. Scene readiness gates the reveal with a timeout fallback; this number is not network progress. Reduced motion skips travel. After arrival, a narrow pulsing light sweeps left to right across the track every 3.4 seconds; the 72% fill and number remain fixed. Disabled for reduced motion.",
   "visible_controls": "Move to discover on desktop, Swipe to discover on touch; no visible range slider or direction labels",
   "wordmark": "Clean original TENSA. typography with permanent frontal fill and a directional silver highlight following the eased ring position. CSS lighting approximation, not the rejected generated wordmark.",

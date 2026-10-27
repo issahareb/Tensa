@@ -129,3 +129,7 @@ html[data-intro="complete"] .swipe-discovered .swipe-hand,html[data-intro="compl
 
 /* Match the static fallback to the more visible garment treatment. */
 .scene-fallback>img{filter:brightness(.34)}
+
+/* Keep the drop status legible when the turning silhouette uncovers the ring. */
+.drop-loader .load-caption{text-shadow:0 1px 3px #050505,0 0 6px #050505,1px 0 #050505,-1px 0 #050505}
+.drop-loader .load-track{box-shadow:0 0 3px #050505}
