@@ -1,4 +1,4 @@
-// Precision remesh of the Tripo ring dimensions with uniform white emission.
+// Precision remesh of the Tripo ring dimensions with smooth white emission.
 // Source generation and local remeshing are documented in production/.
 export function createRingRenderer(gl, buffer) {
   const view = new DataView(buffer);
@@ -20,27 +20,45 @@ export function createRingRenderer(gl, buffer) {
   const program = gl.createProgram();
   gl.attachShader(program, compile(gl.VERTEX_SHADER, `
     attribute vec3 position;
+    attribute vec3 normal;
+    varying vec3 surfaceNormal;
+    varying vec3 cameraPosition;
     uniform vec2 pointer;
+    uniform float rise;
     void main(){
-      float angle=-pointer.x*.82;
+      float angle=-pointer.x*.82*(1.-rise);
       float c=cos(angle),s=sin(angle);
       mat3 rotation=mat3(c,0.,-s,0.,1.,0.,s,0.,c);
-      vec3 p=rotation*position*.59;
-      vec2 center=vec2(pointer.x*.27,.16-pointer.y*.05);
+      // Lift the vertical rear ring into a shallow horizontal halo above the hood.
+      float tilt=-rise*.98;
+      mat3 elevation=mat3(1.,0.,0.,0.,cos(tilt),sin(tilt),0.,-sin(tilt),cos(tilt));
+      vec3 p=elevation*rotation*position*mix(.59,.38,rise);
+      vec2 center=vec2(pointer.x*.27*(1.-rise),.16+rise*.68-pointer.y*.05*(1.-rise));
       float cameraZ=p.z-2.8;
+      surfaceNormal=elevation*rotation*normal;
+      cameraPosition=vec3(p.xy+center,cameraZ);
       gl_Position=vec4((p.xy+center)*2.8,-1.020202*cameraZ-.20202,-cameraZ);
     }`));
   gl.attachShader(program, compile(gl.FRAGMENT_SHADER, `
-    precision mediump float;
-    void main(){gl_FragColor=vec4(1.);}`));
+    precision highp float;
+    varying vec3 surfaceNormal;
+    varying vec3 cameraPosition;
+    void main(){
+      // Smooth opal emission: a white luminous core with a restrained rounded
+      // cross-section falloff. No texture, noise, metallic or plastic shading.
+      float face=abs(dot(normalize(surfaceNormal),normalize(-cameraPosition)));
+      float radiance=.60+.40*pow(face,.65);
+      gl_FragColor=vec4(vec3(radiance),1.);
+    }`));
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw Error('Ring program failed');
-  const positions = gl.createBuffer(), indices = gl.createBuffer();
+  const positions = gl.createBuffer(), normals=gl.createBuffer(), indices = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positions); gl.bufferData(gl.ARRAY_BUFFER, accessor(0), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER,normals);gl.bufferData(gl.ARRAY_BUFFER,accessor(1),gl.STATIC_DRAW);
   const triangles = accessor(2);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, triangles, gl.STATIC_DRAW);
-  const position = gl.getAttribLocation(program, 'position');
-  const pointer = gl.getUniformLocation(program, 'pointer');
+  const position = gl.getAttribLocation(program, 'position'), normal=gl.getAttribLocation(program,'normal');
+  const pointer = gl.getUniformLocation(program, 'pointer'),rise=gl.getUniformLocation(program,'rise');
   const texture = gl.createTexture(); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -49,7 +67,7 @@ export function createRingRenderer(gl, buffer) {
   let size = 0;
   return {
     texture,
-    render(width, x, y) {
+    render(width, x, y, elevation=0) {
       width=Math.min(width*2,maxSize);
       gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
       if (size !== width) {
@@ -64,9 +82,10 @@ export function createRingRenderer(gl, buffer) {
       gl.viewport(0, 0, size, size); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.enable(gl.DEPTH_TEST); gl.useProgram(program);
       gl.bindBuffer(gl.ARRAY_BUFFER, positions); gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 3, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices); gl.uniform2f(pointer, x, y);
+      gl.bindBuffer(gl.ARRAY_BUFFER,normals);gl.enableVertexAttribArray(normal);gl.vertexAttribPointer(normal,3,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices); gl.uniform2f(pointer, x, y);gl.uniform1f(rise,elevation);
       gl.drawElements(gl.TRIANGLES, triangles.length, gl.UNSIGNED_SHORT, 0);
-      gl.disableVertexAttribArray(position); gl.disable(gl.DEPTH_TEST);
+      gl.disableVertexAttribArray(position);gl.disableVertexAttribArray(normal); gl.disable(gl.DEPTH_TEST);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
   };

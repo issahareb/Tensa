@@ -7,8 +7,13 @@ export function createRingBloom(gl) {
   gl.attachShader(program,compile(gl.FRAGMENT_SHADER,`
     precision mediump float;
     varying vec2 uv;uniform sampler2D source;uniform sampler2D garment;
-    uniform vec2 direction;uniform float maskSource;
-    float readLight(vec2 p){return texture2D(source,p).r*(1.-maskSource*texture2D(garment,p).a);}
+    uniform vec2 direction;uniform float maskSource;uniform float rise;
+    float readLight(vec2 p){
+      vec2 garmentUV=(p-vec2(.5,.5-rise*.025))/(1.-rise*.10)+.5;
+      float alpha=texture2D(garment,garmentUV).a;
+      if(any(lessThan(garmentUV,vec2(0.)))||any(greaterThan(garmentUV,vec2(1.))))alpha=0.;
+      return texture2D(source,p).r*(1.-maskSource*alpha);
+    }
     void main(){
       float glow=0.;float weightSum=0.;
       for(int i=-12;i<=12;i++){
@@ -20,13 +25,13 @@ export function createRingBloom(gl) {
       gl_FragColor=vec4(vec3(glow),1.);
     }`));
   gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Bloom link failed');
-  const position=gl.getAttribLocation(program,'position'),direction=gl.getUniformLocation(program,'direction'),mask=gl.getUniformLocation(program,'maskSource');
+  const position=gl.getAttribLocation(program,'position'),direction=gl.getUniformLocation(program,'direction'),mask=gl.getUniformLocation(program,'maskSource'),rise=gl.getUniformLocation(program,'rise');
   const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
   const targets=[0,1].map(()=>({texture:gl.createTexture(),framebuffer:gl.createFramebuffer()}));
   let size=0;
   return {
     texture:targets[1].texture,
-    render(width,ringTexture,garmentTexture){
+    render(width,ringTexture,garmentTexture,elevation=0){
       // Half resolution keeps the glow smooth and inexpensive on touch devices.
       const next=Math.max(1,Math.round(width/2));
       gl.activeTexture(gl.TEXTURE2);
@@ -36,7 +41,7 @@ export function createRingBloom(gl) {
         gl.bindFramebuffer(gl.FRAMEBUFFER,t.framebuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t.texture,0);
         if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Bloom framebuffer failed');
       }}
-      gl.useProgram(program);gl.viewport(0,0,size,size);gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
+      gl.useProgram(program);gl.uniform1f(rise,elevation);gl.viewport(0,0,size,size);gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
       gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,garmentTexture);gl.uniform1i(gl.getUniformLocation(program,'garment'),0);
       gl.uniform1i(gl.getUniformLocation(program,'source'),1);
       for(let pass=0;pass<2;pass++){

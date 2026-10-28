@@ -3,7 +3,7 @@
 // the displayed pose. Only one frame occupies the WebGL garment texture.
 export async function loadGateTurn(){
  const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<900||(navigator.deviceMemory&&navigator.deviceMemory<=4);
- const variant=mobile?'mobile':'desktop',count=48,frames=new Array(count);
+ const variant=mobile?'mobile':'desktop',count=64,frames=new Array(count);
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000);
  let next=0,failed=false;
  async function decode(blob){
@@ -16,7 +16,7 @@ export async function loadGateTurn(){
    while(!failed){
      const index=next++;if(index>=count)return;
      try{
-       const response=await fetch(`/assets/light/turn/${variant}/${String(index).padStart(3,'0')}.webp`,{signal:controller.signal});
+       const response=await fetch(`/assets/light/turn-scroll/${variant}/${String(index).padStart(3,'0')}.webp`,{signal:controller.signal});
        if(!response.ok)throw Error('Turn frame unavailable');
        const frame=await decode(await response.blob());
        if(failed){frame.source.close?.();return}frames[index]=frame;

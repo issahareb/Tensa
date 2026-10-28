@@ -1,0 +1,20 @@
+{
+  "provider": "Higgsfield",
+  "reference_media": "2995135c-799c-415f-8327-32f302aefcdd",
+  "reference": "Existing TENSA elephant artwork without lettering",
+  "jobs": [
+    "e8b91a54-6663-489a-9f9e-c739623ee8b4",
+    "709f4efb-997b-4d06-972a-d82b59cfc528"
+  ],
+  "requested_model": "Nano Banana Pro",
+  "reported_model": "Nano Banana 2",
+  "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3ABE2VcJODYFBgNSodXXFVfhJ1r/hf_20261028_180655_709f4efb-997b-4d06-972a-d82b59cfc528.png",
+  "source_dimensions": [
+    6336,
+    2688
+  ],
+  "asset": "dist/assets/brand/tensa-lockup.svg",
+  "processing": "Monochrome threshold, downsampled PNG mask embedded in SVG; generated elephant and generated lettering arranged side by side. Not a pure vector tracing.",
+  "preflight_estimated_credits": 8,
+  "actual_billing": "Not independently verified"
+}

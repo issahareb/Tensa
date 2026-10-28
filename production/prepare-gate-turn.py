@@ -8,11 +8,11 @@ from pathlib import Path
 import cv2, numpy as np, json, sys
 from PIL import Image
 
-out=Path(__file__).resolve().parents[1]/'dist/assets/light/turn'
+out=Path(__file__).resolve().parents[1]/'dist/assets/light/turn-scroll'
 out.mkdir(parents=True,exist_ok=True)
 cap=cv2.VideoCapture(sys.argv[1])
-count=48
-indices=np.rint(np.linspace(.75*24,3.8*24,count)).astype(int)
+count=64
+indices=np.rint(np.linspace(.75*24,6*24,count)).astype(int)
 frames=[]; source_index=0; wanted=0
 while wanted<count:
     ok,bgr=cap.read()
@@ -37,11 +37,11 @@ while wanted<count:
     for label,size in [('desktop',1280),('mobile',896)]:
         target=out/label;target.mkdir(exist_ok=True)
         image.resize((size,size),Image.Resampling.LANCZOS).save(target/f'{wanted:03}.webp',quality=88,method=4)
-    if wanted in [0,8,16,24,32,40,47]:
+    if wanted in [0,10,20,30,40,50,63]:
         thumb=Image.new('RGB',(300,300),'#050505');small=image.resize((300,300));thumb.paste(small,(0,0),small);frames.append(thumb)
     wanted+=1;source_index+=1
     if wanted%12==0:print(f'{wanted}/{count}',flush=True)
 contact=Image.new('RGB',(300*len(frames),300))
 for i,im in enumerate(frames):contact.paste(im,(i*300,0))
 if len(sys.argv)>2:contact.save(sys.argv[2])
-(out/'manifest.json').write_text(json.dumps({'count':count,'desktop':1280,'mobile':896,'source':'Higgsfield Kling 3.0','generation':'53270b45-8648-4ccf-a79d-120bde9b9fa8','startSeconds':.75,'endSeconds':3.8,'approximateTurnDegrees':115},indent=2)+'\n')
+(out/'manifest.json').write_text(json.dumps({'count':count,'desktop':1280,'mobile':896,'source':'Higgsfield Kling 3.0','generation':'53270b45-8648-4ccf-a79d-120bde9b9fa8','startSeconds':.75,'endSeconds':6,'approximateTurnDegrees':180},indent=2)+'\n')
