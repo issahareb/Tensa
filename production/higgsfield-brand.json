@@ -13,8 +13,9 @@
     6336,
     2688
   ],
-  "asset": "dist/assets/brand/tensa-lockup.svg",
-  "processing": "Monochrome threshold, downsampled PNG mask embedded in SVG; generated elephant and generated lettering arranged side by side. Not a pure vector tracing.",
+  "asset": "dist/assets/brand/tensa-lockup-vector.svg",
+  "processing": "Original-resolution monochrome tracing into cubic Bezier vector paths with vtracer 0.6.15. No embedded raster image, SVG mask or SVG filter. Generated elephant and lettering retain their approved proportions.",
   "preflight_estimated_credits": 8,
-  "actual_billing": "Not independently verified"
+  "actual_billing": "Not independently verified",
+  "rebuild": "python3 production/prepare-brand.py source.png"
 }

@@ -67,9 +67,10 @@
   "drop_status": "Full-screen entrance: decorative counter eases to 72% while the scene loads, then the same bar travels onto the marked lower torso position above the pouch pocket (64% down the garment canvas). It stays at 72%. Scene readiness gates the reveal with a timeout fallback; this number is not network progress. Reduced motion skips travel. After arrival, a narrow pulsing light sweeps left to right across the track every 3.4 seconds; the 72% fill and number remain fixed. Disabled for reduced motion.",
   "visible_controls": "Move the light / Swipe for light; Mehr entdecken links directly to the reveal endpoint. No visible slider.",
   "wordmark": {
-    "asset": "dist/assets/brand/tensa-lockup.svg",
-    "source": "Higgsfield elephant and custom TENSA. lettering, composed as an SVG lockup with embedded monochrome raster artwork.",
-    "lighting": "Permanent warm-white visibility with an additional pointer-following highlight."
+    "asset": "dist/assets/brand/tensa-lockup-vector.svg",
+    "source": "Higgsfield elephant and custom TENSA. lettering, traced at original resolution into pure vector paths.",
+    "lighting": "Permanent warm-white visibility with an additional pointer-following highlight.",
+    "rendering": "Responsive width changes instead of transform-scale; no blur or drop shadow on the brand. Always visible base with a separate pointer-following vector-mask highlight."
   },
   "coming_soon": "Below single-line invitation, three dots bounce sequentially in a continuous gentle rhythm; reduced-motion disables bounce.",
   "intro_emblem": {
