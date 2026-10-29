@@ -41,4 +41,14 @@ svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4733 1170" role="im
        f'<g transform="translate(1546 27)">{letters}</g>'
        '</g></svg>')
 OUTPUT.write_text(svg)
+# The intro animates these exact shapes independently, then hands them over to
+# the combined header asset. Keep dimensions identical to its two SVG groups.
+for name, viewbox, artwork in [
+    ('tensa-elephant-vector.svg', '0 0 1316 1170',
+     f'<g transform="scale({1316/2911:.8f} {1170/2588:.8f})">{elephant}</g>'),
+    ('tensa-wordmark-vector.svg', '0 0 3187 1115', letters),
+]:
+    OUTPUT.with_name(name).write_text(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}">'
+        f'<g fill="#f0eee8">{artwork}</g></svg>')
 print({'asset':str(OUTPUT), 'bytes':len(svg.encode()), 'paths':svg.count('<path')})

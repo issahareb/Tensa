@@ -3,13 +3,15 @@
   const root=document.documentElement;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   root.classList.add('gate-entering');
-  let overlay, observer, chargeFrame, travel, fade, finished=false;
+  let overlay, observer, chargeFrame, readinessTimer, finished=false;
+  const flights=[];
   function finish(){
     if(finished)return;
     finished=true;
     cancelAnimationFrame(chargeFrame);
+    clearTimeout(readinessTimer);clearTimeout(watchdog);
     observer?.disconnect();
-    travel?.cancel();fade?.cancel();
+    flights.forEach(animation=>animation.cancel());
     root.classList.remove('gate-entering');
     document.querySelectorAll('[data-intro-inert]').forEach(el=>{el.inert=false;delete el.dataset.introInert});
     overlay?.remove();
@@ -28,33 +30,53 @@
     overlay.className='gate-intro';
     overlay.setAttribute('role','status');
     overlay.setAttribute('aria-label','TENSA. Der erste Drop wird vorbereitet.');
-    overlay.innerHTML='<div class="intro-backdrop"></div><div class="intro-bar"><span class="intro-brand"><img class="intro-emblem" src="/assets/light/intro-elephant.webp" width="145" height="145" alt="" aria-hidden="true"><span class="intro-wordline">TENSA.</span></span>'+target.innerHTML+'</div>';
+    overlay.innerHTML='<div class="intro-backdrop"></div><div class="intro-brand" aria-hidden="true"><img class="intro-emblem" src="/assets/brand/tensa-elephant-vector.svg" width="1316" height="1170" alt=""><img class="intro-wordline" src="/assets/brand/tensa-wordmark-vector.svg" width="3187" height="1115" alt=""></div><div class="intro-bar">'+target.innerHTML+'</div>';
     document.body.append(overlay);
     document.querySelectorAll('header,main,footer').forEach(el=>{if(!el.inert){el.inert=true;el.dataset.introInert=''}});
     const bar=overlay.querySelector('.intro-bar');
     const number=bar.querySelector('.load-number');
+    const emblem=overlay.querySelector('.intro-emblem');
+    const letters=overlay.querySelector('.intro-wordline');
+    const headerLogo=document.querySelector('.brand-lockup');
     number.textContent='0';
-    let reached=false,ready=false,revealing=false;
+    let reached=false,ready=false,assetsSettled=false,revealing=false;
+    // Animate leaf geometry so SVGs are painted at their actual size throughout
+    // the move. No enlarged cached bitmap, and no dependency on the bar's motion.
+    function fly(element,destination,opacity=1){
+      const start=element.getBoundingClientRect();
+      const initialOpacity=getComputedStyle(element).opacity;
+      overlay.append(element);
+      Object.assign(element.style,{position:'fixed',left:`${start.x}px`,top:`${start.y}px`,width:`${start.width}px`,height:`${start.height}px`,margin:'0',transform:'none',opacity:initialOpacity});
+      const animation=element.animate([
+        {left:`${start.x}px`,top:`${start.y}px`,width:`${start.width}px`,height:`${start.height}px`,opacity:initialOpacity},
+        {left:`${destination.x}px`,top:`${destination.y}px`,width:`${destination.width}px`,height:`${destination.height}px`,opacity}
+      ],{duration:1200,easing:'cubic-bezier(.65,0,.2,1)',fill:'forwards'});
+      flights.push(animation);
+    }
     function reveal(){
-      if(!reached||!ready||revealing||finished)return;
+      if(!reached||!ready||!assetsSettled||revealing||finished)return;
       revealing=true;
       root.dataset.intro='arriving';
       if(reduced.matches){finish();return}
-      const a=bar.getBoundingClientRect(),b=target.getBoundingClientRect();
-      overlay.querySelector('.intro-brand').style.opacity='0';
-      travel=bar.animate([
-        {transform:'translate(0,0) scale(1)'},
-        {transform:`translate(${b.x-a.x}px,${b.y-a.y}px) scale(${b.width/a.width},1)`}
-      ],{duration:1100,easing:'cubic-bezier(.65,0,.2,1)',fill:'forwards'});
-      fade=overlay.querySelector('.intro-backdrop').animate([{opacity:1},{opacity:0}],{duration:1000,easing:'ease-in-out',fill:'forwards'});
-      travel.finished.then(()=>{clearTimeout(watchdog);finish()}).catch(()=>{});
+      const destination=headerLogo?.getBoundingClientRect();
+      if(destination?.width&&[emblem,letters,headerLogo].every(image=>image.complete&&image.naturalWidth)){
+        // Exact bounds of the two groups in the shared 4733 x 1170 lockup.
+        fly(emblem,{x:destination.x,y:destination.y,width:destination.width*1316/4733,height:destination.height});
+        fly(letters,{x:destination.x+destination.width*1546/4733,y:destination.y+destination.height*27/1170,width:destination.width*3187/4733,height:destination.height*1115/1170});
+      }else overlay.querySelector('.intro-brand').style.visibility='hidden';
+      fly(bar,target.getBoundingClientRect());
+      flights.push(overlay.querySelector('.intro-backdrop').animate([{opacity:1},{opacity:0}],{duration:1100,easing:'ease-in-out',fill:'forwards'}));
+      Promise.all(flights.map(animation=>animation.finished)).then(finish).catch(()=>{});
     }
+    const images=[emblem,letters,headerLogo].filter(Boolean);
+    images.forEach(image=>image.addEventListener('error',()=>{if(image!==headerLogo)image.style.visibility='hidden'},{once:true}));
+    Promise.allSettled(images.map(image=>image.decode())).then(()=>{assetsSettled=true;reveal()});
     const scene=document.querySelector('.light-scene');
     const checkReady=()=>{if(scene?.classList.contains('scene-loaded')){ready=true;observer?.disconnect();reveal()}};
     observer=new MutationObserver(checkReady);
     if(scene)observer.observe(scene,{attributes:true,attributeFilter:['class']});
     checkReady();
-    setTimeout(()=>{ready=true;reveal()},6000);
+    readinessTimer=setTimeout(()=>{ready=true;assetsSettled=true;reveal()},6000);
     const start=performance.now();
     function charge(now){
       if(finished)return;
@@ -69,5 +91,5 @@
     reduced.addEventListener('change',()=>{if(reduced.matches){cancelAnimationFrame(chargeFrame);reached=true;if(revealing)finish();else reveal()}},{once:true});
   },{once:true});
   addEventListener('pagehide',finish,{once:true});
-  addEventListener('resize',()=>{if(travel)finish()});
+  addEventListener('resize',()=>{if(flights.length)finish()});
 })();

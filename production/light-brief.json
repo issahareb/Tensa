@@ -74,8 +74,12 @@
   },
   "coming_soon": "Below single-line invitation, three dots bounce sequentially in a continuous gentle rhythm; reduced-motion disables bounce.",
   "intro_emblem": {
-    "asset": "dist/assets/light/intro-elephant.webp",
-    "source": "Image-generation extraction of the user-supplied flat elephant logo, with empty central banner",
-    "presentation": "Fades to 20% white behind a original, unstretched HTML TENSA. wordline. The blank banner border is masked away so only the elephant remains behind the text; fades away as the loading bar travels to the lower torso."
+    "assets": [
+      "dist/assets/brand/tensa-elephant-vector.svg",
+      "dist/assets/brand/tensa-wordmark-vector.svg"
+    ],
+    "source": "The same pure vector shapes as the Higgsfield-derived header lockup.",
+    "presentation": "A subtle 20% elephant sits behind the TENSA. lettering during charging. At 72%, both pieces separate and move to their exact positions in the header over 1200 ms, independently of the loading bar moving onto the hoodie. The elephant becomes fully visible during travel. The original header appears only after the pieces arrive.",
+    "resilience": "Asset decoding before travel, bounded readiness/watchdog timeouts, resize and pagehide cleanup, direct handoff for reduced motion."
   }
 }
