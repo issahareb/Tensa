@@ -34,7 +34,7 @@ function ensureTurn(){
 function turnTarget(value){return smooth(.05,.72,value)}
 const clamp = (n, lo = -1, hi = 1) => Math.max(lo, Math.min(hi, n));
 
-// The garment uses the Higgsfield turn take with a fixed studio camera.
+// The garment uses the approved turn take with a fixed studio camera.
 // Directional lighting is an illustrative surface approximation; the take is
 // not a realtime cloth-physics simulation.
 const vertex = `attribute vec2 position; varying vec2 uv;

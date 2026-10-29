@@ -44,4 +44,7 @@ while wanted<count:
 contact=Image.new('RGB',(300*len(frames),300))
 for i,im in enumerate(frames):contact.paste(im,(i*300,0))
 if len(sys.argv)>2:contact.save(sys.argv[2])
-(out/'manifest.json').write_text(json.dumps({'count':count,'desktop':1280,'mobile':896,'source':'Higgsfield Kling 3.0','generation':'53270b45-8648-4ccf-a79d-120bde9b9fa8','startSeconds':.75,'endSeconds':6,'approximateTurnDegrees':180},indent=2)+'\n')
+(out/'manifest.json').write_text(json.dumps({'count':count,'desktop':1280,'mobile':896,'approximateTurnDegrees':180},indent=2)+'\n')
+# Production provenance stays outside the public asset directory.
+provenance=Path(__file__).resolve().parent/'source/gate-turn-provenance.json'
+provenance.write_text(json.dumps({'source':'Higgsfield Kling 3.0','generation':'53270b45-8648-4ccf-a79d-120bde9b9fa8','startSeconds':.75,'endSeconds':6},indent=2)+'\n')

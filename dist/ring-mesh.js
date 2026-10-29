@@ -1,5 +1,4 @@
-// Precision remesh of the Tripo ring dimensions with smooth white emission.
-// Source generation and local remeshing are documented in production/.
+// Smooth ring geometry with neutral white emission.
 export function createRingRenderer(gl, buffer) {
   const view = new DataView(buffer);
   if (view.getUint32(0, true) !== 0x46546c67) throw Error('Invalid ring model');

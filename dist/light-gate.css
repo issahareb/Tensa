@@ -32,7 +32,7 @@ footer{position:relative;z-index:5;background:#050505;border-top:1px solid #ffff
 @media(max-width:900px) and (max-height:760px){.scroll-gate .gate-stage{min-height:860px}.scroll-gate .access{top:53%}.access h2{font-size:32px}.access-tag{display:none}.intro{margin-bottom:15px}.consent{font-size:10px}.offer{font-size:9px}}
 .scroll-gate .access{transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
 @media(prefers-reduced-motion:reduce){.scroll-gate .access{transition:none}}
-/* Higgsfield elephant + custom lettering, composed as a single brand lockup. */
+/* Elephant + custom lettering, composed as a single brand lockup. */
 .site-header .wordmark{--brand-width:clamp(330px,38vw,540px);width:calc(var(--brand-width)*(1 - var(--header-shift)*.54));height:auto;aspect-ratio:4733/1170;background:none;font-size:0;letter-spacing:0;line-height:0;-webkit-text-fill-color:initial}
 .brand-lockup{display:block;width:100%;height:auto;filter:none}
 .site-header .wordmark::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at var(--word-light-x) 55%,#fff,transparent 70%);mask:url('/assets/brand/tensa-lockup-vector.svg') center/contain no-repeat;-webkit-mask:url('/assets/brand/tensa-lockup-vector.svg') center/contain no-repeat;opacity:var(--word-light-a);pointer-events:none}

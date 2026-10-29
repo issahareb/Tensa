@@ -1,6 +1,7 @@
 // Independent of WebGL: a failed asset or module must never trap the visitor.
 (() => {
   const root=document.documentElement;
+  if(root.dataset.intro==='complete')return;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   root.classList.add('gate-entering');
   let overlay, observer, chargeFrame, readinessTimer, finished=false;
@@ -21,17 +22,13 @@
     root.dataset.intro='complete';
   }
   // A bounded fail-open path also covers slow media and backgrounded tabs.
-  const watchdog=setTimeout(finish,10000);
+  const watchdog=window.__tensaIntroTimer||setTimeout(finish,10000);
+  document.addEventListener('tensa:intro-timeout',finish,{once:true});
   document.addEventListener('DOMContentLoaded',()=>{
     if(finished)return;
     const target=document.querySelector('.drop-loader');
-    if(!target){finish();return}
-    overlay=document.createElement('div');
-    overlay.className='gate-intro';
-    overlay.setAttribute('role','status');
-    overlay.setAttribute('aria-label','TENSA. Der erste Drop wird vorbereitet.');
-    overlay.innerHTML='<div class="intro-backdrop"></div><div class="intro-brand" aria-hidden="true"><img class="intro-emblem" src="/assets/brand/tensa-elephant-vector.svg" width="1316" height="1170" alt=""><img class="intro-wordline" src="/assets/brand/tensa-wordmark-vector.svg" width="3187" height="1115" alt=""></div><div class="intro-bar">'+target.innerHTML+'</div>';
-    document.body.append(overlay);
+    overlay=document.querySelector('.gate-intro');
+    if(!target||!overlay){finish();return}
     document.querySelectorAll('header,main,footer').forEach(el=>{if(!el.inert){el.inert=true;el.dataset.introInert=''}});
     const bar=overlay.querySelector('.intro-bar');
     const number=bar.querySelector('.load-number');

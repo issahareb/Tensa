@@ -1,0 +1,24 @@
+{
+  "dist/assets/light/turn/manifest.json": {
+    "source": "Higgsfield Kling 3.0",
+    "generation": "53270b45-8648-4ccf-a79d-120bde9b9fa8",
+    "startSeconds": 0.75,
+    "endSeconds": 3.8
+  },
+  "dist/assets/light/turn-scroll/manifest.json": {
+    "source": "Higgsfield Kling 3.0",
+    "generation": "53270b45-8648-4ccf-a79d-120bde9b9fa8",
+    "startSeconds": 0.75,
+    "endSeconds": 6
+  },
+  "dist/assets/shop/zip-macro/manifest.json": {
+    "source": "Higgsfield Kling 3.0, 4k mode; 2880px delivered source",
+    "generation": "80bdcadd-a08e-46c1-8bf3-9c9a0500d814",
+    "sourceFrames": [
+      0,
+      264
+    ],
+    "sourceStep": 2,
+    "camera": "authored zoom from full garment to bottom zipper macro"
+  }
+}

@@ -1,4 +1,4 @@
-// A bounded, fully decoded sequence from the Higgsfield turn take. Interaction
+// A bounded, fully decoded sequence from the approved turn take. Interaction
 // starts only once every frame is ready: no network/decode callbacks can rewind
 // the displayed pose. Only one frame occupies the WebGL garment texture.
 export async function loadGateTurn(){

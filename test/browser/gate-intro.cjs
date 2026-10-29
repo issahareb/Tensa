@@ -6,6 +6,23 @@ const screenshot=async(page,name)=>{if(process.env.SCREENSHOT_DIR)await page.scr
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.BROWSER_PATH||undefined,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
  try{
+  // Hold both scripts so the browser paints the HTML before intro setup or WebGL.
+  // A cold navigation must show the loading shell, never the fallback garment.
+  for(const width of [1440,390]){
+   const cold=await browser.newPage({viewport:{width,height:width>900?1000:844},deviceScaleFactor:width>900?1:2,isMobile:width<900});
+   let releaseScripts;const pending=new Promise(resolve=>{releaseScripts=resolve});
+   await cold.route(/\/(gate-intro|light-gate)\.js/,async route=>{await pending;await route.continue()});
+   await cold.goto(base+'/gate',{waitUntil:'commit'});
+   await cold.locator('.gate-intro').waitFor({state:'visible'});
+   await cold.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   assert.equal(await cold.locator('main').evaluate(e=>getComputedStyle(e).visibility),'hidden','Gate is hidden before intro script starts');
+   assert.equal(await cold.locator('.intro-bar .load-number').textContent(),'0');
+   assert.equal(await cold.evaluate(()=>document.elementFromPoint(innerWidth/2,innerHeight*.7)?.closest('.gate-intro')!==null),true,'Loading shell covers the entire first paint');
+   await screenshot(cold,`intro-${width}-first-paint`);releaseScripts();
+   await cold.waitForFunction(()=>document.documentElement.dataset.intro==='complete');
+   assert.equal(await cold.locator('main').evaluate(e=>getComputedStyle(e).visibility),'visible');
+   console.log({width,firstPaint:'loading shell',gateFlash:false});await cold.close();
+  }
   for(const width of [1440,390]){
    const p=await browser.newPage({viewport:{width,height:width>900?1000:844},deviceScaleFactor:width>900?1:2,hasTouch:width<900,isMobile:width<900});
    const errors=[];p.on('pageerror',e=>errors.push(e.message));
@@ -41,6 +58,9 @@ const screenshot=async(page,name)=>{if(process.env.SCREENSHOT_DIR)await page.scr
   const reduced=await browser.newPage({reducedMotion:'reduce'});await reduced.goto(base+'/gate');await reduced.waitForFunction(()=>document.documentElement.dataset.intro==='complete');assert.equal(await reduced.locator('.gate-intro').count(),0);assert.equal(await reduced.locator('main').evaluate(e=>e.inert),false);await reduced.close();
   const failed=await browser.newPage();await failed.route('**/tensa-wordmark-vector.svg',r=>r.abort());await failed.route('**/light-gate.js*',r=>r.abort());await failed.goto(base+'/gate');await failed.waitForFunction(()=>document.documentElement.dataset.intro==='complete',null,{timeout:12000});assert.equal(await failed.locator('main').evaluate(e=>e.inert),false);assert.equal(await failed.locator('.wordmark').evaluate(e=>getComputedStyle(e).visibility),'visible');await failed.close();
   const resized=await browser.newPage();await resized.goto(base+'/gate');await resized.waitForFunction(()=>document.documentElement.dataset.intro==='arriving');await resized.setViewportSize({width:390,height:844});await resized.waitForFunction(()=>document.documentElement.dataset.intro==='complete');assert.equal(await resized.locator('.gate-intro').count(),0);await resized.close();
+  const missingIntro=await browser.newPage();await missingIntro.route('**/gate-intro.js*',r=>r.abort());await missingIntro.goto(base+'/gate');await missingIntro.waitForFunction(()=>document.documentElement.dataset.intro==='complete',null,{timeout:12000});assert.equal(await missingIntro.locator('main').evaluate(e=>getComputedStyle(e).visibility),'visible');assert.equal(await missingIntro.locator('.gate-intro').count(),0);await missingIntro.close();
+  const noJS=await browser.newPage({javaScriptEnabled:false});await noJS.goto(base+'/gate');assert.equal(await noJS.locator('.gate-intro').isVisible(),false);assert.equal(await noJS.locator('main').evaluate(e=>getComputedStyle(e).visibility),'visible');await noJS.close();
   console.log('Reduced motion, unavailable assets/module, and resize all release the page');
+  console.log('Missing intro script and disabled JavaScript also keep the gate accessible');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -1,10 +1,1 @@
-{
-  "count": 64,
-  "desktop": 1280,
-  "mobile": 896,
-  "source": "Higgsfield Kling 3.0",
-  "generation": "53270b45-8648-4ccf-a79d-120bde9b9fa8",
-  "startSeconds": 0.75,
-  "endSeconds": 6,
-  "approximateTurnDegrees": 180
-}
+{"count":64,"desktop":1280,"mobile":896,"approximateTurnDegrees":180}
