@@ -33,6 +33,7 @@
     const bar=overlay.querySelector('.intro-bar');
     const number=bar.querySelector('.load-number');
     const emblem=overlay.querySelector('.intro-emblem');
+    const band=overlay.querySelector('.intro-band');
     const letters=overlay.querySelector('.intro-wordline');
     const headerLogo=document.querySelector('.brand-lockup');
     number.textContent='0';
@@ -58,7 +59,16 @@
       const destination=headerLogo?.getBoundingClientRect();
       if(destination?.width&&[emblem,letters,headerLogo].every(image=>image.complete&&image.naturalWidth)){
         // Exact bounds of the two groups in the shared 4733 x 1170 lockup.
-        fly(emblem,{x:destination.x,y:destination.y,width:destination.width*1316/4733,height:destination.height});
+        const iconTarget={x:destination.x,y:destination.y,width:destination.width*1316/4733,height:destination.height};
+        const iconStart=emblem.getBoundingClientRect();
+        const bandStart=band?.getBoundingClientRect();
+        fly(emblem,iconTarget);
+        if(bandStart){
+          // The original dark nameplate stays on the elephant while loading.
+          // It travels with the icon and fades only as the two marks separate.
+          const sx=iconTarget.width/iconStart.width,sy=iconTarget.height/iconStart.height;
+          fly(band,{x:iconTarget.x+(bandStart.x-iconStart.x)*sx,y:iconTarget.y+(bandStart.y-iconStart.y)*sy,width:bandStart.width*sx,height:bandStart.height*sy},0);
+        }
         fly(letters,{x:destination.x+destination.width*1546/4733,y:destination.y+destination.height*27/1170,width:destination.width*3187/4733,height:destination.height*1115/1170});
       }else overlay.querySelector('.intro-brand').style.visibility='hidden';
       fly(bar,target.getBoundingClientRect());

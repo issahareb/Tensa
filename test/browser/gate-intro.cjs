@@ -30,6 +30,10 @@ const screenshot=async(page,name)=>{if(process.env.SCREENSHOT_DIR)await page.scr
    await p.waitForFunction(()=>Array.from(document.querySelectorAll('.intro-brand img')).length===2&&Array.from(document.querySelectorAll('.intro-brand img')).every(e=>e.complete&&e.naturalWidth));
    const start=await p.evaluate(()=>Object.fromEntries(['emblem','wordline','bar'].map(name=>[name,document.querySelector(`.intro-${name}`).getBoundingClientRect().toJSON()])));
    assert(Math.abs(start.emblem.x+start.emblem.width/2-start.wordline.x-start.wordline.width/2)<1,'Loading symbols overlap on their central axis');
+   const band=await p.locator('.intro-band').evaluate(e=>({rect:e.getBoundingClientRect().toJSON(),opacity:getComputedStyle(e).opacity,background:getComputedStyle(e).backgroundColor}));
+   assert.equal(band.opacity,'1','Dark nameplate remains fully opaque during loading');
+   assert.equal(band.background,'rgb(5, 5, 5)');
+   assert(band.rect.x<start.wordline.x&&band.rect.y<start.wordline.y&&band.rect.x+band.rect.width>start.wordline.x+start.wordline.width&&band.rect.y+band.rect.height>start.wordline.y+start.wordline.height,'Nameplate covers the elephant behind all lettering');
    await screenshot(p,`intro-${width}-start`);
    await p.waitForFunction(()=>document.documentElement.dataset.intro==='arriving'&&document.querySelector('.gate-intro>.intro-emblem')?.getAnimations().length);
    await p.evaluate(()=>{window.introAnimations=document.querySelector('.gate-intro').getAnimations({subtree:true});for(const a of window.introAnimations){a.pause();a.currentTime=600}});
@@ -39,6 +43,8 @@ const screenshot=async(page,name)=>{if(process.env.SCREENSHOT_DIR)await page.scr
    assert(middle.bar.y>start.bar.y,'Loading bar travels independently down onto the hoodie');
    assert.equal(await p.locator('.wordmark').evaluate(e=>getComputedStyle(e).visibility),'hidden','No duplicate header mark during flight');
    assert.equal(await p.locator('.hero-copy').evaluate(e=>getComputedStyle(e).opacity),'0','Hero copy stays clear of the moving logo');
+   const bandFade=await p.locator('.gate-intro>.intro-band').evaluate(e=>Number(getComputedStyle(e).opacity));
+   assert(bandFade>0&&bandFade<1,'Nameplate fades continuously while the logo travels');
    await screenshot(p,`intro-${width}-flight`);
    await p.evaluate(()=>{for(const a of window.introAnimations)a.currentTime=1199.99});
    const landing=await p.evaluate(()=>{
@@ -47,6 +53,7 @@ const screenshot=async(page,name)=>{if(process.env.SCREENSHOT_DIR)await page.scr
     return{parts,expected:[{x:logo.x,y:logo.y,width:logo.width*1316/4733,height:logo.height},{x:logo.x+logo.width*1546/4733,y:logo.y+logo.height*27/1170,width:logo.width*3187/4733,height:logo.height*1115/1170}]};
    });
    for(let i=0;i<2;i++)for(const key of ['x','y','width','height'])assert(Math.abs(landing.parts[i][key]-landing.expected[i][key])<.5,`Seamless ${key} handoff at ${width}px`);
+   assert(await p.locator('.intro-band').evaluate(e=>Number(getComputedStyle(e).opacity)<.001),'Nameplate is gone on arrival in the header');
    await p.evaluate(()=>{for(const a of window.introAnimations)a.play()});
    await p.waitForFunction(()=>document.documentElement.dataset.intro==='complete');
    assert.equal(await p.locator('.gate-intro').count(),0);assert.equal(await p.locator('header').evaluate(e=>e.inert),false);

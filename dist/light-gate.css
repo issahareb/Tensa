@@ -25,6 +25,7 @@ footer{position:relative;z-index:5;background:#050505;border-top:1px solid #ffff
 .intro-brand{position:absolute;left:50%;top:calc(50% - 118px);width:clamp(168px,18vw,210px);aspect-ratio:1316/1170;transform:translate(-50%,-50%);pointer-events:none}
 .intro-emblem{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:.2;object-fit:contain}
 .intro-wordline{position:absolute;left:50%;top:48%;width:90%;height:auto;transform:translate(-50%,-50%);object-fit:contain}
+.intro-band{position:absolute;left:50%;top:48%;width:98%;aspect-ratio:3187/1340;transform:translate(-50%,-50%);background:#050505;pointer-events:none}
 .gate-intro>.intro-emblem,.gate-intro>.intro-wordline{pointer-events:none}
 /* Keep the offer readable at phone widths and over the lower garment. */
 .access h2 em{white-space:nowrap}
