@@ -1,27 +1,64 @@
 import Stripe from 'stripe';
-import {createHash} from 'node:crypto';
-export const SIZES=['XS','S','M','L','XL'];
-const fail=(status,message)=>Object.assign(new Error(message),{status});
-export function createCheckout({db,setting,env=process.env,stripeClient}){
-  db.exec(`CREATE TABLE IF NOT EXISTS inventory(size TEXT PRIMARY KEY,quantity INTEGER NOT NULL CHECK(quantity>=0)); CREATE TABLE IF NOT EXISTS checkouts(id TEXT PRIMARY KEY,cart_hash TEXT NOT NULL,items TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL,session_id TEXT UNIQUE,url TEXT,created_at INTEGER NOT NULL);`);
-  let stock={};try{stock=JSON.parse(env.SHOP_STOCK_JSON||'{}')}catch{}
-  for(const size of SIZES)if(Number.isInteger(stock[size])&&stock[size]>=0)db.prepare('INSERT OR IGNORE INTO inventory VALUES(?,?)').run(size,stock[size]);
-  const stripe=stripeClient||(env.STRIPE_SECRET_KEY?new Stripe(env.STRIPE_SECRET_KEY,{maxNetworkRetries:2,timeout:15000}):null);
-  const countries=(env.SHIPPING_COUNTRIES||'DE').split(',').map(s=>s.trim()).filter(s=>/^[A-Z]{2}$/.test(s));
-  const price=()=>Math.round(Number(setting('price'))*100);
-  function ready(){return !!(env.CHECKOUT_ENABLED==='true'&&setting('launched')==='true'&&stripe&&env.STRIPE_WEBHOOK_SECRET&&/^https:\/\//.test(env.PUBLIC_URL||'')&&env.STRIPE_SHIPPING_RATE_ID&&countries.length&&env.SHOP_OPERATOR&&env.CONTACT_EMAIL&&env.SHOP_SHIPPING_TEXT&&env.SHOP_RETURNS_TEXT&&price()>0&&db.prepare('SELECT count(*) n FROM inventory').get().n===SIZES.length)}
-  function publicConfig(){return {checkoutReady:ready(),sizes:SIZES.map(size=>({size,available:db.prepare('SELECT quantity FROM inventory WHERE size=?').get(size)?.quantity>0})),shippingText:env.SHOP_SHIPPING_TEXT||'',returnsText:env.SHOP_RETURNS_TEXT||'',sizeGuide:env.SHOP_SIZE_GUIDE||'',contactEmail:env.CONTACT_EMAIL||''}}
-  function normalize(items){if(!Array.isArray(items)||!items.length||items.length>5)throw fail(400,'Dein Warenkorb ist leer oder ungültig.');const seen=new Set();return items.map(x=>{if(!x||!SIZES.includes(x.size)||!Number.isInteger(x.qty)||x.qty<1||x.qty>10||seen.has(x.size))throw fail(400,'Bitte prüfe Größe und Menge.');seen.add(x.size);return {size:x.size,qty:x.qty}}).sort((a,b)=>SIZES.indexOf(a.size)-SIZES.indexOf(b.size))}
-  async function start(input){if(!ready())throw fail(503,'Der Checkout ist derzeit nicht verfügbar. Deine Auswahl bleibt gespeichert.');if(!/^[a-zA-Z0-9-]{20,80}$/.test(input?.requestId||''))throw fail(400,'Bitte starte den Checkout erneut.');const items=normalize(input.items),fingerprint=createHash('sha256').update(JSON.stringify(items)).digest('hex');let record=db.prepare('SELECT * FROM checkouts WHERE id=?').get(input.requestId);
-    if(record){if(record.cart_hash!==fingerprint)throw fail(409,'Deine Auswahl hat sich geändert. Bitte starte erneut.');if(['paid','expired'].includes(record.status))throw fail(409,'Diese Checkout-Sitzung ist beendet. Bitte starte erneut.');if(Date.now()-record.created_at>23*3600000)throw fail(409,'Diese Anfrage ist abgelaufen. Bitte kontaktiere uns.');if(record.url)return {url:record.url}}
-    else {db.exec('BEGIN IMMEDIATE');try{for(const item of items){const r=db.prepare('UPDATE inventory SET quantity=quantity-? WHERE size=? AND quantity>=?').run(item.qty,item.size,item.qty);if(!r.changes)throw fail(409,`Größe ${item.size} ist in dieser Menge nicht mehr verfügbar.`)}const amount=price();db.prepare('INSERT INTO checkouts(id,cart_hash,items,amount,status,created_at) VALUES(?,?,?,?,?,?)').run(input.requestId,fingerprint,JSON.stringify(items),amount,'pending',Date.now());db.exec('COMMIT');record=db.prepare('SELECT * FROM checkouts WHERE id=?').get(input.requestId)}catch(e){db.exec('ROLLBACK');throw e}}
-    // Keep the reservation on an ambiguous network failure. A retry with the
-    // same key asks Stripe for the same session, never a duplicate payment.
-    const session=await stripe.checkout.sessions.create({mode:'payment',payment_method_types:['card'],line_items:items.map(x=>({price_data:{currency:'eur',unit_amount:record.amount,product_data:{name:'TENSA. The Washed Zip Hoodie',description:`Washed Black / ${x.size}`,images:[env.PUBLIC_URL+'/assets/shop/editorial/front.webp'],metadata:{size:x.size}}},quantity:x.qty})),shipping_address_collection:{allowed_countries:countries},shipping_options:[{shipping_rate:env.STRIPE_SHIPPING_RATE_ID}],allow_promotion_codes:true,expires_at:Math.floor(record.created_at/1000)+2100,success_url:env.PUBLIC_URL+'/shop?checkout=success&session_id={CHECKOUT_SESSION_ID}',cancel_url:env.PUBLIC_URL+'/shop?checkout=cancelled#product',metadata:{tensa_checkout:input.requestId}}, {idempotencyKey:input.requestId});
-    if(!session.id||!/^https:\/\/checkout\.stripe\.com\//.test(session.url||''))throw fail(502,'Die Zahlungsseite konnte nicht geöffnet werden. Bitte versuche es erneut.');db.prepare('UPDATE checkouts SET session_id=?,url=? WHERE id=?').run(session.id,session.url,input.requestId);return {url:session.url};
+import {createOrders, SIZES, fail} from './orders.mjs';
+import {createPayPalCheckout} from './paypal.mjs';
+import {createManualCheckout} from './manual-checkout.mjs';
+export {SIZES};
+
+export function createCheckout({db, setting, env = process.env, stripeClient, paypalClient}) {
+  const orders = createOrders({db, setting, env});
+  const keyMatchesMode = orders.mode === 'test' ? /^sk_test_/.test(env.STRIPE_SECRET_KEY || '') : /^sk_live_/.test(env.STRIPE_SECRET_KEY || '');
+  const stripe = stripeClient || (keyMatchesMode ? new Stripe(env.STRIPE_SECRET_KEY, {maxNetworkRetries: 2, timeout: 15000}) : null);
+  const methods = [...new Set((env.STRIPE_PAYMENT_METHODS || 'card').split(',').map(s => s.trim()))];
+  const validMethods = methods.length && methods.every(m => ['card', 'paypal', 'klarna'].includes(m));
+  const stripeReady = () => !!(orders.ready() && stripe && env.STRIPE_WEBHOOK_SECRET && env.STRIPE_SHIPPING_RATE_ID && validMethods);
+  const paypal = createPayPalCheckout({orders, env, client: paypalClient});
+  const manual = createManualCheckout({orders, env});
+  const ready = () => stripeReady() || paypal.ready() || manual.methods().length > 0;
+  function publicConfig() {
+    const labels = stripeReady() ? methods.flatMap(m => m === 'card' ? ['Visa', 'Mastercard', 'Apple Pay / Google Pay an der Kasse'] : [m === 'paypal' ? 'PayPal' : 'Klarna']) : [];
+    return {checkoutReady: ready(), stripeReady: stripeReady(), paymentMethods: labels.concat(manual.methods().map(m => m === 'bank_transfer' ? 'Vorkasse' : 'Rechnung')), paymentMode: orders.mode,
+      shippingCountries: orders.countries, shippingCents: Number(env.SHIPPING_AMOUNT_CENTS || 0), applePay: paypal.publicConfig(), manualMethods: manual.methods(), manualTerms: manual.publicTerms(),
+      sizes: SIZES.map(size => ({size, available: db.prepare('SELECT quantity FROM inventory WHERE size=?').get(size)?.quantity > 0})),
+      shippingText: env.SHOP_SHIPPING_TEXT || '', returnsText: env.SHOP_RETURNS_TEXT || '', sizeGuide: env.SHOP_SIZE_GUIDE || '', contactEmail: env.CONTACT_EMAIL || ''};
   }
-  function applyEvent(event){if(!['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.expired','checkout.session.async_payment_failed'].includes(event.type))return;const session=event.data.object,id=session.metadata?.tensa_checkout;if(!id)return;db.exec('BEGIN IMMEDIATE');try{const row=db.prepare('SELECT * FROM checkouts WHERE id=?').get(id);if(row&&(!row.session_id||row.session_id===session.id)){const paid=['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type)&&session.payment_status==='paid';if(paid&&row.status!=='paid'){if(row.status==='expired')throw Error('Paid event after expired reservation requires reconciliation');db.prepare("UPDATE checkouts SET status='paid',session_id=? WHERE id=?").run(session.id,id)}else if(['checkout.session.expired','checkout.session.async_payment_failed'].includes(event.type)&&row.status==='pending'){for(const item of JSON.parse(row.items))db.prepare('UPDATE inventory SET quantity=quantity+? WHERE size=?').run(item.qty,item.size);db.prepare("UPDATE checkouts SET status='expired',session_id=? WHERE id=?").run(session.id,id)}}db.exec('COMMIT')}catch(e){db.exec('ROLLBACK');throw e}}
-  function webhook(raw,signature){if(!stripe||!env.STRIPE_WEBHOOK_SECRET)throw fail(503,'Checkout nicht eingerichtet');let event;try{event=stripe.webhooks.constructEvent(raw,signature,env.STRIPE_WEBHOOK_SECRET)}catch{throw fail(400,'Ungültige Signatur')}applyEvent(event)}
-  function status(id){if(!/^cs_[a-zA-Z0-9_]{10,250}$/.test(id||''))throw fail(400,'Ungültige Sitzung');const row=db.prepare('SELECT status FROM checkouts WHERE session_id=?').get(id);return {status:row?.status||'pending'}}
-  return {ready,publicConfig,start,webhook,status,applyEvent};
+  async function start(input) {
+    if (!stripeReady()) throw fail(503, 'Der Checkout ist derzeit nicht verfügbar. Deine Auswahl bleibt gespeichert.');
+    const record = orders.reserve(input, 'stripe', 'checkout', (items, amount, now) => ({payload: {
+      mode: 'payment', payment_method_types: methods,
+      line_items: items.map(x => ({price_data: {currency: 'eur', unit_amount: amount, product_data: {name: 'TENSA. The Washed Zip Hoodie', description: `Washed Black / ${x.size}`, images: [env.PUBLIC_URL + '/assets/shop/editorial/front.webp'], metadata: {size: x.size}}}, quantity: x.qty})),
+      shipping_address_collection: {allowed_countries: orders.countries}, shipping_options: [{shipping_rate: env.STRIPE_SHIPPING_RATE_ID}], allow_promotion_codes: true,
+      expires_at: Math.floor(now / 1000) + 2100, success_url: env.PUBLIC_URL + '/shop?checkout=success&session_id={CHECKOUT_SESSION_ID}', cancel_url: env.PUBLIC_URL + '/shop?checkout=cancelled#product', metadata: {tensa_checkout: input.requestId}
+    }}));
+    if (record.url) return {url: record.url};
+    // Retry the exact persisted parameters; never release ambiguous requests on a timer.
+    if (Date.now() - record.created_at > 23 * 3600000) throw fail(409, 'Diese Anfrage benötigt eine Prüfung. Bitte kontaktiere uns.');
+    const session = await stripe.checkout.sessions.create(JSON.parse(record.snapshot).payload, {idempotencyKey: input.requestId});
+    if (!session.id || !/^https:\/\/checkout\.stripe\.com\//.test(session.url || '')) throw fail(502, 'Die Zahlungsseite konnte nicht geöffnet werden. Bitte versuche es erneut.');
+    orders.bind(input.requestId, session.id, session.url);
+    return {url: session.url};
+  }
+  function applyEvent(event) {
+    if (!['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.expired', 'checkout.session.async_payment_failed'].includes(event.type)) return;
+    const session = event.data.object, id = session.metadata?.tensa_checkout, row = orders.get(id);
+    if (!row || row.provider !== 'stripe' || (row.session_id && row.session_id !== session.id)) return;
+    if (session.livemode !== undefined && session.livemode !== (orders.mode === 'live')) throw Error('Stripe webhook mode mismatch');
+    orders.bind(id, session.id, row.url);
+    if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
+      orders.transition(id, session.payment_status === 'paid' ? 'paid' : 'processing');
+    } else if (event.type === 'checkout.session.async_payment_failed') orders.transition(id, 'failed');
+    // A completed asynchronous payment is still processing, even after the old session deadline.
+    else if (row.status === 'pending') orders.transition(id, 'expired');
+  }
+  function webhook(raw, signature) {
+    if (!stripe || !env.STRIPE_WEBHOOK_SECRET) throw fail(503, 'Checkout nicht eingerichtet');
+    let event;
+    try { event = stripe.webhooks.constructEvent(raw, signature, env.STRIPE_WEBHOOK_SECRET); } catch { throw fail(400, 'Ungültige Signatur'); }
+    applyEvent(event);
+  }
+  function status(id) {
+    if (!/^cs_[a-zA-Z0-9_]{10,250}$/.test(id || '')) throw fail(400, 'Ungültige Sitzung');
+    const row = db.prepare("SELECT status FROM checkouts WHERE provider='stripe' AND session_id=?").get(id);
+    return {status: row?.status || 'pending'};
+  }
+  return {ready, publicConfig, start, webhook, status, applyEvent, paypal, manual, orders};
 }
