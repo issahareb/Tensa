@@ -12,7 +12,10 @@ export function createManualCheckout({orders, env}) {
     if (orders.mode === 'test' && env.MANUAL_TEST_ENABLED === 'true' && env.ADMIN_PASSWORD && orders.ready() && shipping !== null && shipping <= 100000 && env.BANK_ACCOUNT_HOLDER && iban && env.BANK_TRANSFER_TERMS && env.INVOICE_TERMS) return ['bank_transfer', 'invoice'];
     return methods();
   }
-  const publicTerms = () => Object.fromEntries(allowed().map(m => [m, m === 'bank_transfer' ? env.BANK_TRANSFER_TERMS : env.INVOICE_TERMS]));
+  const termsFor = method => method === 'bank_transfer'
+    ? `${env.BANK_TRANSFER_TERMS} Bei Vorkasse per Echtzeitüberweisung versenden wir die Zahlungsbestätigung innerhalb von 1 Stunde nach Zahlungseingang.`
+    : env.INVOICE_TERMS;
+  const publicTerms = () => Object.fromEntries(allowed().map(m => [m, termsFor(m)]));
   const info = row => ({requestId: row.id, status: row.status, method: row.payment_method, totalCents: JSON.parse(row.snapshot).total, ...JSON.parse(row.snapshot).instructions});
   function start(input) {
     if (!allowed().includes(input.method)) throw fail(503, 'Diese Zahlungsart ist derzeit nicht verfügbar.');
@@ -21,7 +24,7 @@ export function createManualCheckout({orders, env}) {
     const row = orders.reserve(input, 'manual', input.method, (items, price, now) => {
       const total = items.reduce((n, x) => n + x.qty * price, 0) + shipping;
       if (input.expectedTotal !== total) throw fail(409, 'Der Preis hat sich geändert. Bitte lade den Shop neu.');
-      return {total, instructions: {accountHolder: env.BANK_ACCOUNT_HOLDER, iban, reference: input.requestId, terms: input.method === 'bank_transfer' ? env.BANK_TRANSFER_TERMS : env.INVOICE_TERMS}, orderedAt: now};
+      return {total, instructions: {accountHolder: env.BANK_ACCOUNT_HOLDER, iban, reference: input.requestId, terms: termsFor(input.method)}, orderedAt: now};
     }, {customer: contact, expectedTotal: input.expectedTotal});
     orders.transition(row.id, 'awaiting_payment');
     return info(orders.get(row.id));
