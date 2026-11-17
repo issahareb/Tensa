@@ -9,7 +9,9 @@ let paused = reducedQuery.matches;
 let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, lastFrame = 0, renderLight;
 let turn=0,turnSequence=null,turnLoading=false,canTurn=false;
 const root=document.documentElement,gate=document.querySelector('.gate'),stage=document.querySelector('.gate-stage'),access=document.querySelector('#access');
-let scrollTarget=0,scrollVisual=0,lastAccessVisible=false;
+let scrollTarget=0,scrollVisual=0,lastAccessVisible=false,lastBackDescription=false;
+const frontDescription='Schwarzer TENSA Zip-Hoodie mit Kapuze, Reißverschluss und tonalem Elefantenstick auf der Vorderseite.';
+const backDescription='Rückseite des schwarzen TENSA Zip-Hoodies mit Architekturprint unter der Kapuze.';
 root.classList.add('scroll-gate');access.inert=true;
 root.style.setProperty('--form-opacity','0');
 const smooth=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t)};
@@ -94,6 +96,7 @@ function fallbackRenderer(){
   const wrap = document.querySelector('.scene-fallback');
   const base = wrap.querySelector(':scope > img');
   const lit = base.cloneNode();
+  lit.alt='';lit.setAttribute('aria-hidden','true');
   lit.style.cssText='position:absolute;inset:0;filter:grayscale(1) brightness(.60);opacity:0;';
   wrap.append(lit);
   const ring = wrap.querySelector('i');
@@ -181,6 +184,8 @@ function update(time=performance.now()){
   root.style.setProperty('--scene-scale',1+camera*(mobile?.21:.10));
   root.style.setProperty('--form-opacity',formOpacity);
   root.style.setProperty('--form-y',`${(1-formOpacity)*24}px`);
+  const backDescriptionShown=turnSequence?turn>.55:scrollVisual>.55;
+  if(backDescriptionShown!==lastBackDescription){document.querySelector('#hoodieDescription').textContent=backDescriptionShown?backDescription:frontDescription;document.querySelector('.scene-fallback>img').alt=backDescriptionShown?backDescription:frontDescription;lastBackDescription=backDescriptionShown}
   canvas.dataset.scroll=scrollVisual.toFixed(4);access.dataset.visible=String(shown);document.querySelector('.scroll-cue').inert=scrollVisual>.25;
   x=paused?targetX:x+(targetX-x)*ease;
   y=paused?targetY:y+(targetY-y)*ease;
@@ -213,7 +218,7 @@ scene.addEventListener('keydown',e=>{
   const positions={ArrowLeft:targetX-.1,ArrowRight:targetX+.1,Home:0,End:1};
   if(e.key in positions){e.preventDefault();setTarget(positions[e.key])}
 });
-function motionState(){scene.classList.toggle('motion-paused',paused);motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Animation aktivieren':'Animation pausieren';document.querySelector('#lightHint').textContent=matchMedia('(pointer:coarse)').matches?'Swipe for light':'Move the light'}
+function motionState(){scene.classList.toggle('motion-paused',paused);motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Animation aktivieren':'Animation pausieren';document.querySelector('#lightHint').textContent=matchMedia('(pointer:coarse)').matches?'Wische für Licht':'Bewege das Licht'}
 motionButton.addEventListener('click',()=>{paused=!paused;targetX=x;targetY=y;motionState();if(!paused)ensureTurn();requestRender()});
 reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;motionState()});
 addEventListener('resize',measureScroll);motionState();measureScroll();

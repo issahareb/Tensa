@@ -14,7 +14,7 @@ The hoodie texture was generated and cut out with Higgsfield from uploaded TENSA
 
 ## Waitlist and Resend
 
-All registrations before launch qualify for 15%, without a numerical cap. `/api/waitlist` validates explicit consent and stores pending addresses; after launch it rejects new prelaunch registrations. Set `RESEND_API_KEY`, `MAIL_FROM` on a verified domain, `PUBLIC_URL`, `SHOP_OPERATOR`, and `CONTACT_EMAIL`. Without these, the form honestly states that confirmation delivery is deferred. The queue retries delivery up to five times at 15-minute intervals. Confirmation links expire after 24 hours. Confirmed subscribers get a unique reserved 15% code in SQLite.
+All registrations before launch qualify for 15%, without a numerical cap. `/api/waitlist` validates explicit consent and stores pending addresses; after launch it rejects new prelaunch registrations. Set `RESEND_API_KEY`, `MAIL_FROM` on a verified domain, `PUBLIC_URL`, `SHOP_OPERATOR`, `SHOP_ADDRESS`, `CONTACT_EMAIL`, and the approved `PRIVACY_RETENTION_TEXT`. Without these, the form honestly states that confirmation delivery is deferred. The queue retries delivery up to five times at 15-minute intervals. Confirmation links expire after 24 hours. Confirmed subscribers get a unique reserved 15% code in SQLite.
 
 Launch mailing and coupon redemption are not yet connected to a checkout. No bulk launch mailing has been sent. Complete legal/operator details, prices, sizes, stock, shipping and returns before opening sales.
 
@@ -130,3 +130,13 @@ Official implementation references, reviewed 2026-11-02:
 ## Railway
 
 Project `de6df921-d696-42f3-8c53-393ae2b7b175`, production environment `04e543a6-7acb-4685-a086-2cfd1ac6a22b`, service `1e48bbc6-296c-4060-8a60-16703b423678`. Dockerfile uses Node 24; healthcheck `/health`; port 3000; persistent 500 MB volume at `/data`.
+
+## Launch readiness — November 2026
+
+Public legal pages are separate: `/imprint` shows operator/address/contact, while `/privacy` explains data use. Missing operator information and retention policy remain explicitly incomplete; no identity or retention period has been invented. Fill `SHOP_OPERATOR`, `SHOP_ADDRESS`, `CONTACT_EMAIL`, and `PRIVACY_RETENTION_TEXT`; optional `SHOP_REGISTER` and `SHOP_VAT_ID` only where applicable. These settings are required along with the Resend configuration before confirmation delivery starts. The protected admin status lists missing setup keys, never their values.
+
+The form accepts the existing `https://www.tensa.shop` and `https://tensa.shop` origins. No domain redirects or Railway domain/region settings are changed. Verify `PUBLIC_URL` uses the approved public address before enabling mail.
+
+Share metadata and icons are self-hosted. Rebuild `production/build-social-assets.cjs` after replacing the front photograph. The current 1200×630 card uses the existing front visual temporarily; the pending real sample photos and updated backprint still need to replace all product sequences and posters.
+
+`test/waitlist.test.mjs` verifies confirmation, expiry, replay rejection, honeypot filtering and confirmed-only exports using a local transport, with no external emails. A live Resend check requires the real sender configuration and an explicitly provided test recipient.
