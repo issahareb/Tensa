@@ -53,3 +53,9 @@ footer{position:relative;z-index:5;background:#050505;border-top:1px solid #ffff
  .access::before{content:'';position:absolute;inset:-50px calc((100vw - 100%)/-2) -30px;z-index:-1;background:linear-gradient(transparent,#050505ed 65px,#050505 130px);pointer-events:none}
  .site-header{background:linear-gradient(#050505aa,transparent);height:110px}
 }
+
+.hero-copy{display:flex;flex-direction:column;align-items:center;padding-inline:16px}
+.hero-copy .coming-soon{order:-1;margin:0 0 6px;letter-spacing:.1em}
+.drop-invite{max-width:44ch;margin:8px auto 0;color:#dddcd7;font-size:clamp(14px,1.1vw,17px);line-height:1.4;text-wrap:balance}
+.scroll-cue{white-space:nowrap;background:#ebeae4;color:#151513}
+@media(max-width:900px){.drop-invite{max-width:35ch}.hero-copy{top:clamp(136px,18svh,160px)}}

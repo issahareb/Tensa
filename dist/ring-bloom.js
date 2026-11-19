@@ -33,7 +33,7 @@ export function createRingBloom(gl) {
     texture:targets[1].texture,
     render(width,ringTexture,garmentTexture,elevation=0){
       // Half resolution keeps the glow smooth and inexpensive on touch devices.
-      const next=Math.max(1,Math.round(width/2));
+      const next=Math.max(1,Math.min(384,Math.round(width/2)));
       gl.activeTexture(gl.TEXTURE2);
       if(size!==next){size=next;for(const t of targets){
         gl.bindTexture(gl.TEXTURE_2D,t.texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,size,size,0,gl.RGBA,gl.UNSIGNED_BYTE,null);

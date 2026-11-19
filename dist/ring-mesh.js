@@ -67,7 +67,7 @@ export function createRingRenderer(gl, buffer) {
   return {
     texture,
     render(width, x, y, elevation=0) {
-      width=Math.min(width*2,maxSize);
+      width=Math.min(width,1280,maxSize);
       gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
       if (size !== width) {
         size = width;

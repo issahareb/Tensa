@@ -2,7 +2,7 @@
 // flight; intermediate scroll targets are coalesced, never queued or replayed.
 export async function createHeroFilm(canvas){
  const video=document.createElement('video');video.muted=true;video.playsInline=true;video.preload='auto';video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.disableRemotePlayback=true;
- const mobile=matchMedia('(pointer:coarse)').matches;
+ const mobile = Math.min(innerWidth * devicePixelRatio, canvas.clientWidth * devicePixelRatio) <= 1000;
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
  let url;try{const response=await fetch(mobile?'/assets/shop/editorial/hero-mobile.mp4':'/assets/shop/editorial/hero-desktop.mp4',{signal:controller.signal});if(!response.ok)throw Error('Film unavailable');url=URL.createObjectURL(await response.blob())}finally{clearTimeout(timer)}
  await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Film unavailable')),12000);video.onloadeddata=()=>{clearTimeout(timeout);resolve()};video.onerror=()=>{clearTimeout(timeout);reject(Error('Film decode unavailable'))};video.src=url;video.load()}).catch(e=>{URL.revokeObjectURL(url);throw e});
@@ -17,7 +17,7 @@ export async function createHeroFilm(canvas){
    if(candidate>=lower&&candidate<=upper)paint(candidate);
    seek();
  });
- function resize(w,h){const dpr=Math.min(devicePixelRatio,2),pw=Math.round(w*dpr),ph=Math.round(h*dpr);width=w;height=h;if(canvas.width===pw&&canvas.height===ph)return;canvas.width=pw;canvas.height=ph;ctx.setTransform(dpr,0,0,dpr,0,0);if(!seeking)paint(shown)}
+ function resize(w,h){const dpr=Math.min(devicePixelRatio,video.videoWidth/w),pw=Math.round(w*dpr),ph=Math.round(h*dpr);width=w;height=h;if(canvas.width===pw&&canvas.height===ph)return;canvas.width=pw;canvas.height=ph;ctx.setTransform(pw/w,0,0,ph/h,0,0);ctx.imageSmoothingQuality="high";if(!seeking)paint(shown)}
  function draw(progress){wanted=Math.min(lastFrame,Math.round(Math.max(0,Math.min(1,progress)) * lastFrame*fps)/fps);canvas.dataset.targetTime=wanted.toFixed(4);seek()}
  paint(0);
  return {resize,draw,dispose(){disposed=true;controller.abort();video.removeAttribute('src');video.load();URL.revokeObjectURL(url)}};

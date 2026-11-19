@@ -1,5 +1,5 @@
-import {createRingRenderer} from '/ring-mesh.js?v=halo-depth-18';
-import {createRingBloom} from '/ring-bloom.js?v=halo-depth-18';
+import {createRingRenderer} from '/ring-mesh.js?v=halo-depth-24';
+import {createRingBloom} from '/ring-bloom.js?v=halo-depth-24';
 import {loadGateTurn} from '/gate-turn.js?v=scroll-16';
 const canvas = document.querySelector('#lightCanvas');
 const scene = document.querySelector('.light-scene');
@@ -134,14 +134,18 @@ function initialiseTexture(image,ringBuffer){
         if(next!==displayedFrame){
           gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);
           gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,next.flipY);
-          gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,next.source);
+          if(displayedFrame && next.source.width===displayedFrame.source.width && next.source.height===displayedFrame.source.height){
+            gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,next.source);
+          }else{
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,next.source);
+          }
           gl.useProgram(program);gl.uniform2f(gl.getUniformLocation(program,'texel'),1/next.source.width,1/next.source.height);
           displayedFrame=next;bloomDirty=true;
         }
         canvas.dataset.turn=String(Math.round(displayProgress*((turnSequence?.count||64)-1)));
       }
       // Reserve resolution for the maximum CSS zoom; never resize per scroll frame.
-      const size=Math.min(1920,Math.round(canvas.clientWidth*1.21*Math.min(devicePixelRatio,2)));
+      const size=Math.min(1920,Math.round(canvas.clientWidth*1.055*Math.min(devicePixelRatio,2)));
       if(canvas.width!==size){canvas.width=size;canvas.height=size}
       const rise=smooth(.08,.8,scrollVisual);
       const ringLightX=lx*(1-rise),ringLightY=ly*(1-rise);
@@ -181,7 +185,7 @@ function update(time=performance.now()){
   root.style.setProperty('--intro-copy',1-smooth(.01,.25,scrollVisual));
   root.style.setProperty('--scene-shift',`0%`);
   root.style.setProperty('--scene-lift',`${(mobile?-115:-45)*camera}px`);
-  root.style.setProperty('--scene-scale',1+camera*(mobile?.21:.10));
+  root.style.setProperty('--scene-scale',1+camera*(mobile?.035:.055));
   root.style.setProperty('--form-opacity',formOpacity);
   root.style.setProperty('--form-y',`${(1-formOpacity)*24}px`);
   const backDescriptionShown=turnSequence?turn>.55:scrollVisual>.55;

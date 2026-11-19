@@ -1,18 +1,18 @@
 import {initApplePay} from '/apple-pay.js?v=payments-1';
-import {createHeroFilm} from '/hero-film.js?v=film-2';
+import {createHeroFilm} from '/hero-film.js?v=drop-24';
 const $=s=>document.querySelector(s),clamp=(v,min=0,max=1)=>Math.max(min,Math.min(max,v));
 const money=v=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(v);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const story=$('#zipStory'),stage=$('.zip-stage'),garment=$('#garment'),canvas=$('#zipCanvas');
-let scene=null,progress=0,raf=0,last=0,visible=true;
+let scene=null,progress=0,raf=0,visible=true;
 let geometry={top:0,distance:1,width:0,height:0};
 function measure(){const width=stage.clientWidth,height=stage.clientHeight;geometry={top:scrollY+story.getBoundingClientRect().top,distance:Math.max(1,story.offsetHeight-height),width,height};scene?.resize(garment.clientWidth,garment.clientHeight);requestRender()}
 function requestRender(){if(!raf)raf=requestAnimationFrame(render)}
-function render(time){raf=0;const target=reduced.matches?0:clamp((scrollY-geometry.top)/geometry.distance);const dt=Math.min(50,last?time-last:16);last=time;progress+= (target-progress)*(1-Math.exp(-dt/80));if(Math.abs(target-progress)<.0001)progress=target;
+function render(){raf=0;progress=reduced.matches?0:clamp((scrollY-geometry.top)/geometry.distance);
  story.style.setProperty('--zip-progress',progress.toFixed(5));story.dataset.progress=progress.toFixed(5);story.dataset.phase=progress>.84?'back':'rotate';
  $('#zipPercent').textContent=progress<.25?'FRONT':progress<.7?'TURN':'BACK';$('#zipHoldHint').classList.toggle('visible',progress>.84&&progress<.99);$('.shop-header').classList.toggle('scrolled',scrollY>60);
  const rail=$('#purchaseRail'),showRail=scrollY>geometry.distance+geometry.height*.5&&!$('#bag').open;rail.classList.toggle('visible',showRail);rail.inert=!showRail;
- if(scene&&visible&&!reduced.matches)scene.draw(clamp(progress/.84));if(progress!==target&&visible)requestRender();else last=0;
+ if(scene&&visible&&!reduced.matches)scene.draw(clamp(progress/.84));
 }
 addEventListener('scroll',requestRender,{passive:true});let resizeTimer;addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(measure,120)});
 new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)requestRender()}).observe(stage);
