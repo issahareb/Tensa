@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
    await scroll(p,1);const frames=await samples;assert.equal(frames.at(-1),63);assert(frames.every((v,i)=>!i||v>=frames[i-1]),'Scroll forward never rewinds');await settled(p,1);
    assert.equal(await p.locator('#lightCanvas').getAttribute('data-rise'),'1.000');
    assert.equal(await p.locator('#access').evaluate(e=>e.inert),false);
-   assert.equal(await p.locator('#accessTitle').innerText(),'Dein Code für\nDrop 001.');
+   assert.equal(await p.locator('#accessTitle').innerText(),'Deine 15 % zum Drop.');
    assert(await p.evaluate(()=>Number(getComputedStyle(document.documentElement).getPropertyValue('--scene-scale'))>1));
    await p.waitForFunction(()=>!document.querySelector('#access').getAnimations().some(a=>a.playState==='running'));
    const canvasBounds=await p.locator('#lightCanvas').boundingBox();assert(Math.abs(canvasBounds.x+canvasBounds.width/2-width/2)<1,'Halo and hoodie remain centered');

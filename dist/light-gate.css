@@ -56,6 +56,25 @@ footer{position:relative;z-index:5;background:#050505;border-top:1px solid #ffff
 
 .hero-copy{display:flex;flex-direction:column;align-items:center;padding-inline:16px}
 .hero-copy .coming-soon{order:-1;margin:0 0 6px;letter-spacing:.1em}
-.drop-invite{max-width:44ch;margin:8px auto 0;color:#dddcd7;font-size:clamp(14px,1.1vw,17px);line-height:1.4;text-wrap:balance}
 .scroll-cue{white-space:nowrap;background:#ebeae4;color:#151513}
-@media(max-width:900px){.drop-invite{max-width:35ch}.hero-copy{top:clamp(136px,18svh,160px)}}
+@media(max-width:900px){.hero-copy{top:clamp(136px,18svh,160px)}}
+
+/* Let the signup panel's actual height determine the space above the footer. */
+@media(max-width:900px){
+  .scroll-gate .gate-stage{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    height:auto;
+    min-height:100svh;
+    padding:clamp(100px,23svh,220px) 0 max(20px,env(safe-area-inset-bottom));
+  }
+  .scroll-gate .access{
+    position:relative;
+    inset:auto;
+    flex:none;
+    margin:0 auto;
+    transform:translateY(var(--form-y));
+  }
+  .scroll-cue{bottom:max(20px,env(safe-area-inset-bottom))}
+}
