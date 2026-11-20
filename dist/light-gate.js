@@ -1,5 +1,5 @@
 import {createRingRenderer} from '/ring-mesh.js?v=halo-depth-24';
-import {createRingBloom} from '/ring-bloom.js?v=halo-depth-24';
+import {createRingBloom} from '/ring-bloom.js?v=gate-26';
 import {loadGateTurn} from '/gate-turn.js?v=scroll-16';
 const canvas = document.querySelector('#lightCanvas');
 const scene = document.querySelector('.light-scene');
@@ -7,6 +7,8 @@ const motionButton = document.querySelector('#motionToggle');
 const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let paused = reducedQuery.matches;
 let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, lastFrame = 0, renderLight;
+let yaw=0,targetYaw=0;
+const maxYawDegrees=5;
 let turn=0,turnSequence=null,turnLoading=false,canTurn=false;
 const root=document.documentElement,gate=document.querySelector('.gate'),stage=document.querySelector('.gate-stage'),access=document.querySelector('#access');
 let scrollTarget=0,scrollVisual=0,lastAccessVisible=false,lastBackDescription=false;
@@ -18,6 +20,7 @@ const smooth=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3
 function measureScroll(){
   const distance=Math.max(1,gate.offsetHeight-stage.offsetHeight);
   scrollTarget=clamp((scrollY-gate.offsetTop)/distance,0,1);
+  if(scrollTarget>0){targetX=0;targetY=0}
   if(scrollTarget>.02&&!reducedQuery.matches)ensureTurn();
   requestRender();
 }
@@ -41,11 +44,18 @@ const clamp = (n, lo = -1, hi = 1) => Math.max(lo, Math.min(hi, n));
 // not a realtime cloth-physics simulation.
 const vertex = `attribute vec2 position; varying vec2 uv;
 void main(){uv=position*.5+.5;gl_Position=vec4(position,0.,1.);}`;
+// Inverse perspective projection of the garment plane, pivoting at its center.
+const garmentProjection = `uniform vec2 yawBasis;
+vec2 garmentCoords(vec2 p){
+  vec2 q=(p-vec2(.5,.5-rise*.025))/(1.-rise*.10);
+  float depth=yawBasis.x-q.x*yawBasis.y;
+  return vec2(q.x,q.y*yawBasis.x)/depth+.5;
+}`;
 const fragment = `precision highp float;
 varying vec2 uv; uniform sampler2D garment; uniform sampler2D lamp; uniform sampler2D glow; uniform vec2 light; uniform vec2 texel; uniform vec2 lampPixel; uniform float turnAmount; uniform float rise;
+${garmentProjection}
 vec4 garmentAt(vec2 p){
-  // Make room above the hood for a separate floating halo at the scroll end.
-  vec2 garmentUV=(p-vec2(.5,.5-rise*.025))/(1.-rise*.10)+.5;
+  vec2 garmentUV=garmentCoords(p);
   if(any(lessThan(garmentUV,vec2(0.)))||any(greaterThan(garmentUV,vec2(1.))))return vec4(0.);
   return texture2D(garment,garmentUV);
 }
@@ -82,9 +92,10 @@ void main(){
   // behind the garment. Side lighting adds form without washing out the black.
   float rim=edge*(.04*(1.-side)+.27*facingEdge*side);
   float fabric=dot(cloth.rgb,vec3(.3333));
-  float logoMask=1.-smoothstep(.82,1.,length((uv-vec2(.62,.58))/vec2(.049,.061)));
+  vec2 garmentUV=garmentCoords(uv);
+  float logoMask=1.-smoothstep(.82,1.,length((garmentUV-vec2(.62,.58))/vec2(.049,.061)));
   float logoContour=smoothstep(.24,.40,fabric);
-  float logoRight=smoothstep(.589,.651,uv.x);
+  float logoRight=smoothstep(.589,.651,garmentUV.x);
   float illuminatedHalf=mix(1.-logoRight,logoRight,step(0.,light.x));
   float logoLight=logoMask*logoContour*side*(.012+.115*illuminatedHalf)*(1.-smoothstep(0.,.12,turnAmount));
   float sideFill=side*(.012+.022*mix(1.-uv.x,uv.x,step(0.,light.x)));
@@ -104,7 +115,7 @@ function fallbackRenderer(){
   return (lx,ly)=>{
     const back=scrollVisual>.55;if(back!==showingBack){base.src=lit.src=back?'/assets/light/turn-scroll/back.webp':'/assets/light/turn-scroll/front.webp';showingBack=back}
     ring.style.transform=`translate(${lx*37*(1-scrollVisual)}%,${ly*5*(1-scrollVisual)-scrollVisual*44}%) scale(${1-scrollVisual*.36},${1-scrollVisual*.80}) scaleX(${1-Math.abs(lx)*.35*(1-scrollVisual)})`;
-    base.style.transform=lit.style.transform=`translateY(${scrollVisual*2.5}%) scale(${1-scrollVisual*.10})`;
+    base.style.transform=lit.style.transform=`translateY(${scrollVisual*2.5}%) scale(${1-scrollVisual*.10}) perspective(850px) rotateY(${yaw*maxYawDegrees}deg)`;
     lit.style.opacity=String(.12+Math.abs(lx)*.38);
     lit.style.maskImage=`linear-gradient(${lx<0?'90':'270'}deg,black,transparent 85%)`;
   };
@@ -121,11 +132,12 @@ function initialiseTexture(image,ringBuffer){
     const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
     gl.uniform1i(gl.getUniformLocation(program,'garment'),0);
-    const ring=createRingRenderer(gl,ringBuffer), bloom=createRingBloom(gl);gl.useProgram(program);gl.uniform1i(gl.getUniformLocation(program,'glow'),2);gl.uniform1i(gl.getUniformLocation(program,'lamp'),1);gl.uniform2f(gl.getUniformLocation(program,'texel'),1/image.width,1/image.height);
+    const ring=createRingRenderer(gl,ringBuffer), bloom=createRingBloom(gl,garmentProjection);gl.useProgram(program);gl.uniform1i(gl.getUniformLocation(program,'glow'),2);gl.uniform1i(gl.getUniformLocation(program,'lamp'),1);gl.uniform2f(gl.getUniformLocation(program,'texel'),1/image.width,1/image.height);
     const light=gl.getUniformLocation(program,'light'),turnUniform=gl.getUniformLocation(program,'turnAmount'),riseUniform=gl.getUniformLocation(program,'rise'),lampPixel=gl.getUniformLocation(program,'lampPixel');
+    const yawUniform=gl.getUniformLocation(program,'yawBasis');
     const frontFrame={source:image,flipY:true};let backFrame=null;
     loadImage('/assets/light/turn-scroll/back.webp').then(image=>{backFrame={source:image,flipY:true};requestRender()}).catch(()=>{});
-    let displayedFrame=null,ringX=null,ringY=null,ringSize=0,ringRise=null;canTurn=true;
+    let displayedFrame=null,ringX=null,ringY=null,ringSize=0,ringRise=null,lastYaw=null;canTurn=true;
     renderLight=(lx,ly)=>{
       const displayProgress=!turnSequence&&scrollVisual>=.8?1:turn;
       let bloomDirty=false;
@@ -150,12 +162,16 @@ function initialiseTexture(image,ringBuffer){
       const rise=smooth(.08,.8,scrollVisual);
       const ringLightX=lx*(1-rise),ringLightY=ly*(1-rise);
       if(ringSize!==size||ringX!==ringLightX||ringY!==ringLightY||ringRise!==rise){ring.render(size,lx,ly,rise);ringSize=size;ringX=ringLightX;ringY=ringLightY;ringRise=rise;bloomDirty=true}
-      if(bloomDirty)bloom.render(size,ring.texture,texture,rise);
+      const angle=yaw*maxYawDegrees*Math.PI/180;
+      const yawCos=Math.cos(angle),yawSin=Math.sin(angle);
+      if(bloomDirty||yaw!==lastYaw)bloom.render(size,ring.texture,texture,rise,yawCos,yawSin);
+      lastYaw=yaw;
       gl.viewport(0,0,size,size);gl.useProgram(program);
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
       gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);
       gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,ring.texture);
       gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,bloom.texture);
+      gl.uniform2f(yawUniform,yawCos,yawSin);
       gl.uniform2f(lampPixel,1/size,1/size);gl.uniform2f(light,lx,ly);gl.uniform1f(turnUniform,displayProgress);gl.uniform1f(riseUniform,rise);gl.drawArrays(gl.TRIANGLES,0,6);canvas.dataset.light=lx.toFixed(3);canvas.dataset.renderer='mesh-3d';canvas.dataset.rise=rise.toFixed(3);
     };
     canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();canTurn=false;turnSequence?.dispose();turnSequence=null;canvas.dataset.turnState='unavailable';scene.classList.remove('scene-ready');renderLight=fallbackRenderer();update()});
@@ -195,6 +211,8 @@ function update(time=performance.now()){
   y=paused?targetY:y+(targetY-y)*ease;
   if(Math.abs(targetX-x)<.001)x=targetX;
   if(Math.abs(targetY-y)<.001)y=targetY;
+  yaw=paused?0:yaw+(targetYaw-yaw)*ease;
+  if(Math.abs(targetYaw-yaw)<.001)yaw=targetYaw;
   renderLight?.(x,y);
   // Directional typographic highlight follows the same eased ring position.
   // Keep a permanent frontal fill so the brand never becomes a silhouette.
@@ -204,25 +222,43 @@ function update(time=performance.now()){
   wordmark.style.setProperty('--word-edge-x',`${-x*.7}px`);
   scene.setAttribute('aria-valuenow',String(Math.round(x*100)));
   scene.setAttribute('aria-valuetext',scrollVisual>.7?'Licht von oben auf den Backprint':Math.abs(x)<.15?'Licht hinter dem Hoodie':x<0?'Licht von links':'Licht von rechts');
-  if(x!==targetX||y!==targetY||turn!==wantedTurn||scrollVisual!==scrollTarget)frame=requestAnimationFrame(update);else lastFrame=0;
+  if(yaw!==targetYaw||x!==targetX||y!==targetY||turn!==wantedTurn||scrollVisual!==scrollTarget)frame=requestAnimationFrame(update);else lastFrame=0;
 }
 function requestRender(){if(!frame)frame=requestAnimationFrame(update)}
 function setTarget(lx,ly=0){targetX=clamp(lx);targetY=clamp(ly);requestRender()}
 
 document.addEventListener('pointermove',e=>{
-  if(paused||e.pointerType==='touch'||e.target.closest('input,button,a,label'))return;
-  setTarget(e.clientX/innerWidth*2-1,e.clientY/innerHeight*2-1);
+  if(paused||e.pointerType!=='mouse')return;
+  targetYaw=clamp(e.clientX/innerWidth*2-1);
+  if(scrollTarget===0&&!e.target.closest('input,button,a,label'))setTarget(targetYaw,e.clientY/innerHeight*2-1);
+  else requestRender();
 },{passive:true});
-document.documentElement.addEventListener('pointerleave',e=>{if(!paused&&e.pointerType!=='touch')setTarget(0)});
-let dragging=false,swipeStartX=0;
-scene.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch'||e.target.closest('input'))return;dragging=true;swipeStartX=e.clientX;const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)});
-scene.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!dragging)return;if(Math.abs(e.clientX-swipeStartX)>24)scene.classList.add('swipe-discovered');const r=scene.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width*2-1)},{passive:true});
-scene.addEventListener('pointerup',()=>{dragging=false});scene.addEventListener('pointercancel',()=>{dragging=false});
+function resetPointer(){touchId=null;targetYaw=0;setTarget(0)}
+document.documentElement.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')resetPointer()});
+addEventListener('blur',resetPointer);
+let touchId=null,swipeStartX=0;
+function trackTouch(e){
+  const r=scene.getBoundingClientRect();
+  setTarget((e.clientX-r.left)/r.width*2-1);
+}
+scene.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch'||touchId!==null)return;
+  touchId=e.pointerId;swipeStartX=e.clientX;targetYaw=0;
+  scene.setPointerCapture(touchId);
+  trackTouch(e);
+});
+scene.addEventListener('pointermove',e=>{
+  if(e.pointerId!==touchId)return;
+  if(Math.abs(e.clientX-swipeStartX)>24)scene.classList.add('swipe-discovered');
+  trackTouch(e);
+},{passive:true});
+function endTouch(e){if(e.pointerId===touchId)resetPointer()}
+for(const event of ['pointerup','pointercancel','lostpointercapture'])scene.addEventListener(event,endTouch);
 scene.addEventListener('keydown',e=>{
   const positions={ArrowLeft:targetX-.1,ArrowRight:targetX+.1,Home:0,End:1};
   if(e.key in positions){e.preventDefault();setTarget(positions[e.key])}
 });
-function motionState(){scene.classList.toggle('motion-paused',paused);motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Animation aktivieren':'Animation pausieren';document.querySelector('#lightHint').textContent=matchMedia('(pointer:coarse)').matches?'Wische für Licht':'Bewege das Licht'}
+function motionState(){if(paused){yaw=targetYaw=0;requestRender()}scene.classList.toggle('motion-paused',paused);motionButton.setAttribute('aria-pressed',String(paused));motionButton.textContent=paused?'Animation aktivieren':'Animation pausieren';document.querySelector('#lightHint').textContent=matchMedia('(pointer:coarse)').matches?'Wische für Licht':'Bewege das Licht'}
 motionButton.addEventListener('click',()=>{paused=!paused;targetX=x;targetY=y;motionState();if(!paused)ensureTurn();requestRender()});
 reducedQuery.addEventListener('change',e=>{paused=e.matches;targetX=x;targetY=y;motionState()});
 addEventListener('resize',measureScroll);motionState();measureScroll();
